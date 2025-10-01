@@ -7,7 +7,7 @@ import com.spacehog.model.LevelState
 import java.util.LinkedList
 import java.util.Queue
 
-class LevelManager(private val enemyManager: EnemyManager) {
+class LevelManager(private val enemyManager: EnemyManager, private val scaler: Scaler) {
 
     private val campaign: Queue<LevelProperties> = LinkedList()
     var currentLevelNumber = 0

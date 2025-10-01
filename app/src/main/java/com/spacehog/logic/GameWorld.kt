@@ -12,6 +12,7 @@ import com.spacehog.model.FireRate
 import com.spacehog.model.LevelState
 import com.spacehog.model.PlayerLifeState
 import com.spacehog.model.PlayerShip
+import com.spacehog.model.PlayerState
 import com.spacehog.model.PowerUpType
 import com.spacehog.model.StarField
 
@@ -30,33 +31,45 @@ class GameWorld(context: Context, private val holder: SurfaceHolder, private val
         private set
     var score = 0
         private set
+    var lastKnownState: LevelState? = null
+
     val assetLibrary: AssetLibrary
     val playerShip: PlayerShip
     val starField: StarField
-    private val enemyManager: EnemyManager
     val levelManager: LevelManager
+
+    private val scaler: Scaler
+    private val enemyManager: EnemyManager
     private val effectManager: EffectManager
-    var lastKnownState: LevelState? = null
+
 
     init {
         Log.d("GameWorld", "Initializing GameWorld...")
         assetLibrary = AssetLibrary(context)
-
         val screenRect = holder.surfaceFrame
-
         // Bullet Pool Calculation
-        val bulletSpeed = BulletType.PLAYER_STANDARD.speed.let { if(it < 0) it * -1 else it }
+
         val screenHeight = screenRect.height().toFloat()
+
+        val bulletSpeed = BulletType.PLAYER_STANDARD.speed.let { if(it < 0) it * -1 else it }
         val bulletLifetimeSeconds = screenHeight / (bulletSpeed * 60)
         val bulletPoolSize = FireRate.calculateRequiredPoolSize(bulletLifetimeSeconds)
+
+        scaler = Scaler(screenRect.width().toFloat(), screenRect.height().toFloat())
+
+
+        val playerBitmap = assetLibrary.getBitmap(PlayerState.NORMAL.asset)
+        val playerAspectRatio = playerBitmap.height.toFloat() / playerBitmap.width.toFloat()
+        val playerWidth = scaler.getSpriteWidth(1f / 7f)
+        val playerHeight = playerWidth * playerAspectRatio
 
         // Player Ship Creation
         playerShip = PlayerShip(
             assetLibrary = assetLibrary,
-            width = 150f,
-            height = 150f,
-            x = (screenRect.width() / 2f) - 75f,
-            y = screenRect.height() - 250f,
+            width = playerWidth,
+            height = playerHeight,
+            x = (screenRect.width() / 2f) - (playerWidth / 2f),
+            y = screenRect.height() - scaler.scaleY(300f),
             bulletPoolSize = bulletPoolSize
         )
 
@@ -64,8 +77,8 @@ class GameWorld(context: Context, private val holder: SurfaceHolder, private val
         starField = StarField(screenRect.width().toFloat(), screenHeight, 0f, 0f)
         starField.generateNewStars()
 
-        enemyManager = EnemyManager(assetLibrary) // Pass assetLibrary
-        levelManager = LevelManager(enemyManager)
+        enemyManager = EnemyManager(assetLibrary) // todo: implement new scale for screen resolution
+        levelManager = LevelManager(enemyManager) // todo: implement new scale for screen resolution
         effectManager = EffectManager(assetLibrary)
 
         // Set the player's initial fire rate based on the first level's data
