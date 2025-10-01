@@ -8,21 +8,22 @@ import com.spacehog.ui.game.GameScreen
 import com.spacehog.ui.menu.MenuScreen
 import com.spacehog.ui.splash.SplashScreen
 import com.spacehog.ui.settings.SettingsScreen
+import com.spacehog.util.GameFocusManager
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    gameFocusManager: GameFocusManager,
+    isReadyToProceed: Boolean // <-- NEW parameter
+) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "splash") { // Start at the splash screen
+    NavHost(navController = navController, startDestination = "splash") {
 
         composable("splash") {
             SplashScreen(
-                onSplashFinished = {
-                    // When the splash is done, navigate to menu and remove
-                    // the splash screen from the back stack.
-                    navController.navigate("menu") { // Assuming "menu" is your next screen
-                        popUpTo("splash") {
-                            inclusive = true
-                        }
+                isReadyToProceed = isReadyToProceed, // <-- Pass it to the splash screen
+                onFinish = {
+                    navController.navigate("menu") {
+                        popUpTo("splash") { inclusive = true }
                     }
                 }
             )
@@ -34,10 +35,9 @@ fun AppNavigation() {
             MenuScreen(navController = navController)
         }
 
-
         // Add the Game route (for now, it can be a placeholder)
         composable("game") {
-            GameScreen(navController = navController)
+            GameScreen(navController = navController, gameFocusManager = gameFocusManager)
         }
 
         composable("settings") {
