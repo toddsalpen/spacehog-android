@@ -15,8 +15,7 @@ import com.spacehog.model.StarField
 
 class SplashScreenRenderer(
     context: Context,
-    private val holder: SurfaceHolder,
-    private val onSplashFinished: () -> Unit // Callback to trigger navigation
+    private val holder: SurfaceHolder
 ) : Runnable {
 
     private var thread: Thread? = null
@@ -100,12 +99,6 @@ class SplashScreenRenderer(
         }
     }
 
-    fun onTouch() {
-        // When touched, trigger the callback to navigate away
-        if (isRunning) {
-            onSplashFinished()
-        }
-    }
 
     private fun updateCanvas() {
         starField.update()
@@ -126,26 +119,31 @@ class SplashScreenRenderer(
     }
 
     fun resume() {
-        isRunning = true
-        thread = Thread(this)
-        thread?.start()
+        if (thread == null || !thread!!.isAlive) {
+            isRunning = true
+            thread = Thread(this)
+            thread?.start()
+        }
     }
 
     fun pause() {
         isRunning = false
         mediaPlayer?.pause()
-        var retry = true
-        while (retry) {
-            try {
-                thread?.join()
-                retry = false
-            } catch (e: InterruptedException) {
-                // Handle exception
-            }
+        try {
+            thread?.join(200) // Wait a bit for the thread to finish
+        } catch (e: InterruptedException) {
+            //
         }
     }
 
     fun stop() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+    }
+
+    // A new method for when the screen is fully destroyed
+    fun stopAndRelease() {
+        pause() // Ensure the thread is stopped
         mediaPlayer?.stop()
         mediaPlayer?.release()
     }

@@ -29,10 +29,30 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.spacehog.util.GameFocusManager
+import com.spacehog.util.ImmersiveModeEffect
 
 // NEW: The screen now accepts a NavController to handle the "Exit" button.
 @Composable
-fun GameScreen(navController: NavController) {
+fun GameScreen(
+    navController: NavController,
+    gameFocusManager: GameFocusManager // <-- Accept the new parameter
+) {
+
+    // 1. Activate our Immersive Mode effect, which hides the system bars.
+    ImmersiveModeEffect()
+
+    // 2. This effect manages entering and exiting our "game focus" mode.
+    DisposableEffect(Unit) {
+        // When the GameScreen becomes active, enter game mode.
+        gameFocusManager.enterGameMode()
+
+        // When the GameScreen is left (onDispose), exit game mode and restore notifications.
+        onDispose {
+            gameFocusManager.exitGameMode()
+        }
+    }
+
     val renderer = remember { mutableStateOf<GameRenderer?>(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
     var isGameOver by remember { mutableStateOf(false) }
