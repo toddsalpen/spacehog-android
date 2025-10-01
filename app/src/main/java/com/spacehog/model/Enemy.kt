@@ -18,82 +18,69 @@ class Enemy(
     bitmap = initialBitmap,
     width = width,
     height = height,
-    x = -200f, // Start off-screen
+    x = -200f,
     y = -200f,
-    // Each enemy has its own small bullet pool.
     bulletBank = BulletBank(poolSize = 5, assetLibrary = assetLibrary)
 ) {
     var hp = type.hp
     var isActive = false
         private set
+
     var movementStrategy: MovementStrategy = StraightDownStrategy()
         private set
+
     var movementSpeed: Float = MovementSpeed.NORMAL.pixelsPerFrame
         private set
 
     init {
-        // Set a random initial delay for firing so that enemies don't all shoot in perfect sync.
-        // We access the 'fireCooldown' property directly from the parent Ship class.
+        // Set an initial random fire cooldown for variety.
+        // This will be properly configured again upon spawn.
         super.fireCooldown = Random.nextLong(0, super.currentFireRate.delayMs)
     }
 
     /**
-     * The single entry point for updating an enemy's state. Called by EnemyManager every frame.
-     * This method is a state machine: it internally decides what logic to run.
+     * This is the single entry point for updating an enemy's state, called by EnemyManager.
+     * It correctly handles the "disappearing bullet" bug.
      */
     fun update(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float) {
-        // The bullets of a destroyed ship should continue to fly. Always update them.
+        // --- THIS IS THE PERSISTENT LOGIC ---
+        // An enemy's bullets should continue to update even if the enemy is destroyed.
         updateBullets(deltaTimeMs, screenHeight)
 
-        // Only run the "living" logic (AI, movement) if the enemy is active.
+        // --- THIS IS THE "LIVING" LOGIC ---
+        // Only run AI (movement, firing) if the enemy is active.
         if (isActive) {
-            updateShipLogic(deltaTimeMs)
-            updateMovement(deltaTimeMs, screenHeight, screenWidth)
+            // updateShipLogic handles animation and firing cooldowns
+            super.updateShipLogic(deltaTimeMs)
+
+            // Firing Decision AI
+            if (fireCooldown <= 0L && this.y > 0) {
+                fire()
+            }
+
+            // Movement AI and Boundary Checks
+            movementStrategy.update(this, deltaTimeMs, screenHeight, screenWidth)
             checkWorldBounds(screenHeight, screenWidth)
         }
     }
 
-    /**
-     * Overrides the base ship logic to provide custom enemy AI for firing.
-     */
-    override fun updateShipLogic(deltaTimeMs: Long) {
-        // Call the parent's logic first. This handles sprite animation
-        // and, most importantly, it counts down the 'fireCooldown' timer.
-        super.updateShipLogic(deltaTimeMs)
+    // THIS IS NO LONGER NEEDED. updateShipLogic is now only defined in the parent Ship class.
+    // override fun updateShipLogic(deltaTimeMs: Long) { ... }
 
-        // Firing decision AI: If the cooldown is ready and we are on screen, fire.
-        if (fireCooldown <= 0L && this.y > 0) {
-            fire()
-        }
-    }
+    // THIS IS NO LONGER NEEDED. The logic is now inside the main update method.
+    // private fun updateMovement(...) { ... }
 
     /**
-     * A private method that fully delegates movement to the current strategy.
-     * There are no other movement or boundary checks in the Enemy class itself.
-     */
-    private fun updateMovement(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float) {
-        movementStrategy.update(this, deltaTimeMs, screenHeight, screenWidth)
-    }
-
-    /**
-     * The Enemy's specialized draw method.
-     * This is the key to fixing the "zombie ship" bug.
+     * The Enemy's specialized draw method to handle invisibility when defeated.
      */
     override fun draw(canvas: Canvas, paint: Paint) {
         if (isActive) {
-            // If the enemy is alive, let the parent Ship class handle drawing
-            // both the sprite and this enemy's active bullets.
             super.draw(canvas, paint)
         } else {
-            // If the enemy has been destroyed, ONLY draw its remaining bullets.
-            // Do not draw the ship's sprite.
             bulletBank.drawAll(canvas, paint)
         }
     }
 
-    /**
-     * The Enemy's specific fire command. It knows what type of bullet it should shoot.
-     */
     fun fire() {
         super.fireWeapon(BulletType.ENEMY_STANDARD)
     }
@@ -108,17 +95,19 @@ class Enemy(
         startY: Float,
         fireRate: FireRate,
         movementPattern: MovementStrategy,
-        movementSpeed: MovementSpeed
+        movementSpeed: MovementSpeed,
+        newWidth: Float,
+        newHeight: Float
     ) {
-        // 1. Reconfigure core properties
         this.type = newType
         this.masterBitmap = newBitmap
         this.hp = newType.hp
         this.isActive = true
-        this.movementSpeed = movementSpeed.pixelsPerFrame
+        this.width = newWidth
+        this.height = newHeight
 
-        // 2. Reconfigure visual state and animation
         this.clearFrames()
+
         val frameWidth = masterBitmap.width / newType.frameCount
         val frameHeight = masterBitmap.height
         for (i in 0 until newType.frameCount) {
@@ -126,19 +115,17 @@ class Enemy(
         }
         if (newType.frameCount > 1) {
             this.loops = true
-            this.frameDelayMs = 250L // Could also be data-driven in EnemyType
+            this.frameDelayMs = 250L
             this.play()
         } else {
-            this.pause() // Ensure non-animated sprites are paused
+            this.pause()
         }
 
-        // 3. Reconfigure position and behavior
         this.x = startX
         this.y = startY
         this.upgradeFireRate(fireRate)
         this.movementStrategy = movementPattern
-
-        // Reset the cooldown with a random initial delay for variety
+        this.movementSpeed = movementSpeed.pixelsPerFrame
         super.fireCooldown = Random.nextLong(fireRate.delayMs)
     }
 
@@ -150,25 +137,15 @@ class Enemy(
         }
     }
 
-    /**
-     * Checks if the enemy has gone outside the screen boundaries.
-     * If so, it wraps the enemy back to the top at a new random horizontal position.
-     * This ensures no enemy is ever permanently lost off-screen.
-     */
     private fun checkWorldBounds(screenHeight: Float, screenWidth: Float) {
-        // Check all four boundaries
         val isOffScreenBottom = this.y > screenHeight
-        val isOffScreenTop = this.y < -this.height * 2 // Give extra buffer at the top
+        val isOffScreenTop = this.y < -this.height * 2
         val isOffScreenLeft = this.x < -this.width
         val isOffScreenRight = this.x > screenWidth
 
         if (isOffScreenBottom || isOffScreenTop || isOffScreenLeft || isOffScreenRight) {
-            // If the enemy is off-screen for ANY reason, reset it.
-            this.y = -this.height // Always reset to just above the screen
-            this.x = Random.nextFloat() * screenWidth // Give it a new random X start position
-
-            // For complex strategies, we may need to reset their internal state.
-            // We can add a method to the interface for this.
+            this.y = -this.height
+            this.x = Random.nextFloat() * screenWidth
             movementStrategy.onOutOfBounds(this)
         }
     }

@@ -1,5 +1,6 @@
 package com.spacehog.ui.game
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -9,6 +10,7 @@ import android.graphics.Typeface
 import com.spacehog.data.AssetLibrary
 import com.spacehog.data.GameAsset
 import com.spacehog.logic.DebugData
+import com.spacehog.logic.Scaler
 import com.spacehog.model.LevelState
 import com.spacehog.model.PowerUpType
 import kotlin.math.max
@@ -16,27 +18,28 @@ import kotlin.math.max
 class HUD(
     private val screenHeight: Float,
     private val screenWidth: Float,
-    private val assetLibrary: AssetLibrary
+    private val assetLibrary: AssetLibrary,
+    private val scaler: Scaler
 ) {
     // --- Paints (The "Brushes" for our UI) ---
 
     private val scorePaint = Paint().apply {
         color = Color.WHITE
-        textSize = 60f
+        textSize = scaler.scaleFont(60f)
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         textAlign = Paint.Align.LEFT
     }
 
     private val livesTextPaint = Paint().apply {
         color = Color.WHITE
-        textSize = 40f
+        textSize = scaler.scaleFont(40f)
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         textAlign = Paint.Align.LEFT
     }
 
     private val hpTextPaint = Paint().apply {
         color = Color.BLACK // Black for good contrast on green/red
-        textSize = 40f
+        textSize = scaler.scaleFont(40f)
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         textAlign = Paint.Align.RIGHT // Aligned to the right
     }
@@ -46,14 +49,14 @@ class HUD(
 
     private val messagePaint = Paint().apply {
         color = Color.WHITE
-        textSize = 100f
+        textSize = scaler.scaleFont(100f)
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         textAlign = Paint.Align.CENTER
     }
 
     private val debugPaint = Paint().apply {
         color = Color.CYAN
-        textSize = 32f
+        textSize = scaler.scaleFont(32f)
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
         textAlign = Paint.Align.LEFT
     }
@@ -118,19 +121,20 @@ class HUD(
 
     // --- NEW HELPER METHODS FOR EACH COMPONENT ---
 
+    @SuppressLint("DefaultLocale")
     private fun drawScoreCounter(canvas: Canvas) {
         val scoreText = String.format("%010d", score)
-        val xPos = 50f
-        val yPos = 80f
+        val xPos = scaler.scaleX(50f)
+        val yPos = scaler.scaleY(80f)
         canvas.drawText(scoreText, xPos, yPos, scorePaint)
     }
 
     private fun drawLivesCounter(canvas: Canvas) {
-        val scoreY = 80f // Anchor below the score
+        val scoreY = scaler.scaleY(80f) // Anchor below the score
         val livesTopY = scoreY + 30f
-        val iconSize = 50f
+        val iconSize = scaler.scaleX(50f)
         val textPadding = 15f
-        val iconX = 50f
+        val iconX = scaler.scaleX(50f)
 
         val iconRect = RectF(iconX, livesTopY, iconX + iconSize, livesTopY + iconSize)
         canvas.drawBitmap(playerShipIcon, null, iconRect, null)
@@ -142,10 +146,13 @@ class HUD(
 
     private fun drawHealthBar(canvas: Canvas) {
         // --- Layout Constants ---
+
+        val yPos = scaler.scaleY(80f)
         val barHeight = scorePaint.textSize
         val cornerRadius = barHeight / 2f
-        val topMargin = (80f - barHeight / 2f) + (scorePaint.descent() + scorePaint.ascent()) / 2f
-        val barMargin = 20f
+
+        val topMargin = yPos - (barHeight / 2f) - (scorePaint.descent() + scorePaint.ascent()) / 2f
+        val barMargin = scaler.scaleX(20f)
 
         val totalBarWidth = screenWidth * 0.66f // Let's make it 50% of the screen width
         val barRight = screenWidth - barMargin
@@ -172,8 +179,8 @@ class HUD(
     }
 
     private fun drawPowerUpQueue(canvas: Canvas) {
-        val iconSize = 80f
-        val padding = 20f
+        val iconSize = scaler.scaleX(80f)
+        val padding = scaler.scaleX(20f)
         var startX = padding
 
         for (powerUp in powerUpQueue) {
@@ -198,8 +205,8 @@ class HUD(
     }
 
     private fun drawDebugInfo(canvas: Canvas) {
-        val startY = 300f
-        val lineHeight = 40f
+        val startY = scaler.scaleY(300f)
+        val lineHeight = scaler.scaleX(40f)
 
         canvas.drawText("--- DEBUG INFO ---", 50f, startY, debugPaint)
         canvas.drawText("Level: ${debugData.levelNumber} [${debugData.levelState}]", 50f, startY + lineHeight * 1, debugPaint)

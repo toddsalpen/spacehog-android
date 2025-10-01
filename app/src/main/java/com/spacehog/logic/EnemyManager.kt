@@ -11,9 +11,11 @@ import com.spacehog.model.FireRate
 import com.spacehog.model.MovementSpeed
 
 class EnemyManager(
-    private val assetLibrary: AssetLibrary, // Takes the pre-loaded library
+    private val assetLibrary: AssetLibrary,
+    private val scaler: Scaler,
     private val maxEnemiesOnScreen: Int = 50
 ) {
+
     private val enemyPool = mutableListOf<Enemy>()
     private val bitmaps = mutableMapOf<EnemyType, Bitmap>()
     // --- Pre-create one of each strategy to avoid creating them during gameplay ---
@@ -36,12 +38,9 @@ class EnemyManager(
             enemyPool.add(
                 Enemy(
                     type = defaultType,
-                    // --- THE FIX ---
-                    // The Enemy constructor takes the initial bitmap and the asset library.
                     initialBitmap = bitmaps[defaultType]!!,
-                    // --- END OF FIX ---
-                    width = 120f,
-                    height = 120f,
+                    width = scaler.scaleX(defaultType.virtualWidth),
+                    height = scaler.scaleX(defaultType.virtualHeight),
                     assetLibrary = assetLibrary
                 )
             )
@@ -50,7 +49,14 @@ class EnemyManager(
 
     fun spawnEnemy(type: EnemyType, x: Float, y: Float, fireRate: FireRate, patternType: MovementPatternType, speed: MovementSpeed) {
         val enemyToSpawn = enemyPool.firstOrNull { !it.isActive }
-        // Pass the new bitmap from our local map.
+
+        val bitmap = bitmaps[type]!!
+        val aspectRatio = bitmap.height.toFloat() / bitmap.width.toFloat()
+
+        val newWidth = scaler.scaleX(type.virtualWidth)
+        val newHeight = newWidth * aspectRatio
+
+
         enemyToSpawn?.spawn(
             type,
             bitmaps[type]!!,
@@ -58,7 +64,9 @@ class EnemyManager(
             y,
             fireRate,
             movementStrategies[patternType]!!,
-            movementSpeed = speed
+            movementSpeed = speed,
+            newWidth = newWidth,
+            newHeight = newHeight
             )
     }
 
