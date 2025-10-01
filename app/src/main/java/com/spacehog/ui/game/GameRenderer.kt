@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.SurfaceHolder
 import com.spacehog.logic.DebugData
 import com.spacehog.logic.GameWorld
+import com.spacehog.logic.Scaler
 import com.spacehog.model.LevelState
 
 class GameRenderer(
@@ -38,11 +39,19 @@ class GameRenderer(
     private fun setupGame() {
         Log.d("GameRenderer", "Setting up game assets on background thread...")
         try {
-            gameWorld = GameWorld(context, holder, onGameOver = onGameOver)
+            // 1. The GameRenderer is the first to know the screen size, so it creates the Scaler.
+            val scaler = Scaler(
+                holder.surfaceFrame.width().toFloat(),
+                holder.surfaceFrame.height().toFloat()
+            )
+
+            // 2. It then passes this single Scaler instance to both the GameWorld and the HUD.
+            gameWorld = GameWorld(context, holder, scaler, onGameOver = onGameOver)
             hud = HUD(
                 holder.surfaceFrame.height().toFloat(),
                 holder.surfaceFrame.width().toFloat(),
-                gameWorld!!.assetLibrary // Use the asset library from the game world
+                gameWorld!!.assetLibrary, // Use the asset library from the game world
+                scaler = scaler
             )
             Log.d("GameRenderer", "Game setup complete.")
         } catch (e: IllegalStateException) {

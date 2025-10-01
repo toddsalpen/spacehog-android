@@ -11,9 +11,9 @@ import com.spacehog.model.FireRate
 import com.spacehog.model.MovementSpeed
 
 class EnemyManager(
-    private val assetLibrary: AssetLibrary, // Takes the pre-loaded library
-    private val maxEnemiesOnScreen: Int = 50,
-    private val scaler: Scaler
+    private val assetLibrary: AssetLibrary,
+    private val scaler: Scaler,
+    private val maxEnemiesOnScreen: Int = 50
 ) {
 
     private val enemyPool = mutableListOf<Enemy>()

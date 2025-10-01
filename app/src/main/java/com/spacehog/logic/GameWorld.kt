@@ -26,7 +26,12 @@ enum class GameWorldState {
     GAME_OVER
 }
 
-class GameWorld(context: Context, private val holder: SurfaceHolder, private val onGameOver: () -> Unit) {
+class GameWorld(
+    context: Context,
+    private val holder: SurfaceHolder,
+    private val scaler: Scaler, // <-- NEW: Receive the scaler as a parameter
+    private val onGameOver: () -> Unit
+){
     var state: GameWorldState = GameWorldState.PLAYING
         private set
     var score = 0
@@ -38,7 +43,6 @@ class GameWorld(context: Context, private val holder: SurfaceHolder, private val
     val starField: StarField
     val levelManager: LevelManager
 
-    private val scaler: Scaler
     private val enemyManager: EnemyManager
     private val effectManager: EffectManager
 
@@ -54,8 +58,6 @@ class GameWorld(context: Context, private val holder: SurfaceHolder, private val
         val bulletSpeed = BulletType.PLAYER_STANDARD.speed.let { if(it < 0) it * -1 else it }
         val bulletLifetimeSeconds = screenHeight / (bulletSpeed * 60)
         val bulletPoolSize = FireRate.calculateRequiredPoolSize(bulletLifetimeSeconds)
-
-        scaler = Scaler(screenRect.width().toFloat(), screenRect.height().toFloat())
 
 
         val playerBitmap = assetLibrary.getBitmap(PlayerState.NORMAL.asset)
@@ -77,8 +79,8 @@ class GameWorld(context: Context, private val holder: SurfaceHolder, private val
         starField = StarField(screenRect.width().toFloat(), screenHeight, 0f, 0f)
         starField.generateNewStars()
 
-        enemyManager = EnemyManager(assetLibrary) // todo: implement new scale for screen resolution
-        levelManager = LevelManager(enemyManager) // todo: implement new scale for screen resolution
+        enemyManager = EnemyManager(assetLibrary, scaler) // todo: implement new scale for screen resolution
+        levelManager = LevelManager(enemyManager, scaler) // todo: implement new scale for screen resolution
         effectManager = EffectManager(assetLibrary)
 
         // Set the player's initial fire rate based on the first level's data
