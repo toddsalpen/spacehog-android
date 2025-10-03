@@ -12,21 +12,17 @@ import com.spacehog.util.GameFocusManager
 
 @Composable
 fun AppNavigation(
-    gameFocusManager: GameFocusManager,
-    isReadyToProceed: Boolean // <-- NEW parameter
+    gameFocusManager: GameFocusManager
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "splash") {
 
         composable("splash") {
-            SplashScreen(
-                isReadyToProceed = isReadyToProceed, // <-- Pass it to the splash screen
-                onFinish = {
+            SplashScreen(onFinish = {
                     navController.navigate("menu") {
                         popUpTo("splash") { inclusive = true }
                     }
-                }
-            )
+            })
         }
 
         composable("menu") {

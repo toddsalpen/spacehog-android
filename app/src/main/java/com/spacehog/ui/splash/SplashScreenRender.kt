@@ -10,6 +10,7 @@ import android.os.Process
 import android.view.SurfaceHolder
 import com.spacehog.R
 import com.spacehog.data.DrawablesManager
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.model.Sprite
 import com.spacehog.model.StarField
 
@@ -18,11 +19,11 @@ class SplashScreenRenderer(
     private val holder: SurfaceHolder
 ) : Runnable {
 
+    private val starfieldManager = StarfieldManager()
     private var thread: Thread? = null
     @Volatile private var isRunning = false
 
     private val screenSize: Point
-    private val starField: StarField
     private val logo: Sprite
     private val paint = Paint()
     private val mediaPlayer: MediaPlayer?
@@ -36,12 +37,7 @@ class SplashScreenRenderer(
         // Get screen size from the surface holder
         val screenRect = holder.surfaceFrame
         screenSize = Point(screenRect.width(), screenRect.height())
-
-        // --- THE FIX ---
-        // Create the StarField directly, not the wrapper Background class.
-        starField = StarField(screenSize.x.toFloat(), screenSize.y.toFloat(), 0f, 0f)
-        starField.generateNewStars()
-        // --- END OF FIX ---
+        starfieldManager.initialize(screenRect.width().toFloat(), screenRect.height().toFloat())
 
         val drawablesManager = DrawablesManager(context)
         val logoBitmap = drawablesManager.getBitmap(R.drawable.space_hog)
@@ -101,7 +97,7 @@ class SplashScreenRenderer(
 
 
     private fun updateCanvas() {
-        starField.update()
+        starfieldManager.update()
     }
 
     private fun drawCanvas(canvas: Canvas) {
@@ -109,7 +105,11 @@ class SplashScreenRenderer(
         canvas.drawColor(Color.BLACK)
 
         // 2. Draw the star field. This will modify the paint's alpha for each star.
-        starField.draw(paint, canvas)
+        paint.color = Color.WHITE
+        for (star in starfieldManager.starStates) {
+            paint.alpha = (star.alpha * 255).toInt()
+            canvas.drawPoint(star.x, star.y, paint)
+        }
 
         // 3. CRITICAL FIX: Reset the paint's alpha to fully opaque before drawing the next thing.
         paint.alpha = 255 // 255 means fully opaque (not transparent)

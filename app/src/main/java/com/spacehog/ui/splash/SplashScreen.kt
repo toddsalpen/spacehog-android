@@ -19,20 +19,11 @@ import com.spacehog.util.ImmersiveModeEffect
 
 @Composable
 fun SplashScreen(
-    isReadyToProceed: Boolean,
     onFinish: () -> Unit
 ) {
 
     // This state prevents onFinish from being called multiple times.
     val hasFinished = remember { mutableStateOf(false) }
-
-    // This effect triggers navigation automatically if permission is granted later.
-    LaunchedEffect(isReadyToProceed) {
-        if (isReadyToProceed && !hasFinished.value) {
-            hasFinished.value = true
-            onFinish()
-        }
-    }
 
     // This state will hold our renderer instance
     val renderer = remember { mutableStateOf<SplashScreenRenderer?>(null) }
@@ -52,8 +43,8 @@ fun SplashScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
-                        // The tap gesture can also trigger the finish, but only once.
-                        if (isReadyToProceed && !hasFinished.value) {
+                        // A tap is now the primary way to finish.
+                        if (!hasFinished.value) {
                             hasFinished.value = true
                             onFinish()
                         }

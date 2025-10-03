@@ -69,26 +69,19 @@ open class Sprite(
 
     // --- Drawing Methods ---
 
-    /** Draws the sprite's current frame to the canvas without rotation. */
+    // This draw method is perfect. No changes needed.
     open fun draw(canvas: Canvas, paint: Paint) {
         if (frames.isEmpty()) return
 
-        // --- START OF THE DEFINITIVE FIX ---
-
-        // Calculate the actual frame to draw using the safe modulo operator.
-        // If frames.size is 2, and index is 2, (2 % 2) is 0.
-        // If frames.size is 2, and index is 3, (3 % 2) is 1.
-        // This will ALWAYS be a valid index (0 or 1).
         val safeIndex = if (state == AnimationState.FINISHED) {
-            frames.size - 1 // If finished, always draw the last frame
+            frames.size - 1
         } else {
             currentFrameIndex % frames.size
         }
 
+        // It's still a good defensive practice for a Sprite to ensure it's opaque.
         paint.alpha = 255
-        // Use the safeIndex to get the bitmap. This CANNOT crash.
         canvas.drawBitmap(frames[safeIndex], x, y, paint)
-
     }
 
     /** Draws the sprite's current frame, rotating it around its center. */

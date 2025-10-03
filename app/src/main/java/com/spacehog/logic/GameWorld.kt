@@ -2,6 +2,7 @@ package com.spacehog.logic
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.util.Log
 import android.view.SurfaceHolder
@@ -32,33 +33,31 @@ class GameWorld(
     private val scaler: Scaler, // <-- NEW: Receive the scaler as a parameter
     private val onGameOver: () -> Unit
 ){
+
+    val assetLibrary: AssetLibrary
+    val playerShip: PlayerShip
+    val enemyManager: EnemyManager
+    val effectManager: EffectManager
+    val starfieldManager: StarfieldManager
+    val levelManager: LevelManager
+
     var state: GameWorldState = GameWorldState.PLAYING
         private set
     var score = 0
         private set
     var lastKnownState: LevelState? = null
-
-    val assetLibrary: AssetLibrary
-    val playerShip: PlayerShip
-    val starField: StarField
-    val levelManager: LevelManager
-
-    private val enemyManager: EnemyManager
-    private val effectManager: EffectManager
-
+    private var lastKnownLevel = 0
 
     init {
         Log.d("GameWorld", "Initializing GameWorld...")
         assetLibrary = AssetLibrary(context)
         val screenRect = holder.surfaceFrame
         // Bullet Pool Calculation
-
-        val screenHeight = screenRect.height().toFloat()
-
+        val screenHeight = holder.surfaceFrame.height().toFloat()
+        val screenWidth = holder.surfaceFrame.width().toFloat()
         val bulletSpeed = BulletType.PLAYER_STANDARD.speed.let { if(it < 0) it * -1 else it }
         val bulletLifetimeSeconds = screenHeight / (bulletSpeed * 60)
         val bulletPoolSize = FireRate.calculateRequiredPoolSize(bulletLifetimeSeconds)
-
 
         val playerBitmap = assetLibrary.getBitmap(PlayerState.NORMAL.asset)
         val playerAspectRatio = playerBitmap.height.toFloat() / playerBitmap.width.toFloat()
@@ -74,11 +73,8 @@ class GameWorld(
             y = screenRect.height() - scaler.scaleY(300f),
             bulletPoolSize = bulletPoolSize
         )
-
-        // StarField and Enemy Manager Creation
-        starField = StarField(screenRect.width().toFloat(), screenHeight, 0f, 0f)
-        starField.generateNewStars()
-
+        starfieldManager = StarfieldManager()
+        starfieldManager.initialize(screenWidth, screenHeight)
         enemyManager = EnemyManager(assetLibrary, scaler) // todo: implement new scale for screen resolution
         levelManager = LevelManager(enemyManager, scaler) // todo: implement new scale for screen resolution
         effectManager = EffectManager(assetLibrary)
@@ -86,50 +82,51 @@ class GameWorld(
         // Set the player's initial fire rate based on the first level's data
         playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
 
+        syncPlayerToLevel()
+
     }
 
     fun update(deltaTimeMs: Long, playerTouchX: Float?, isPlayerFiring: Boolean) {
-
-        // Pass the screen dimensions to the player and enemies.
-        val screenHeight = holder.surfaceFrame.height().toFloat()
-        val screenWidth = holder.surfaceFrame.width().toFloat()
-
         if (state == GameWorldState.GAME_OVER) return
 
-        // Check if the player has run out of lives
-        if (playerShip.lifeState == PlayerLifeState.GAME_OVER) {
-            state = GameWorldState.GAME_OVER
-            onGameOver() // Notify the listener that the game has ended!
-            return // Stop the rest of the update for this frame
+        starfieldManager.update()
+        levelManager.update(deltaTimeMs)
+
+        if (isPlayerFiring) {
+            playerShip.fire()
         }
-
-        starField.update()
-
-        // --- Player Input Logic ---
-        // Movement is still tied to position
-        playerShip.update(deltaTimeMs, screenHeight, screenWidth)
 
         playerTouchX?.let { touchX ->
             val targetX = touchX - (playerShip.width / 2f)
             playerShip.x = lerp(playerShip.x, targetX, 0.25f)
         }
 
-        // Firing is now tied to the separate 'isFiring' flag.
-        if (isPlayerFiring) {
-            playerShip.fire()
+        playerShip.update(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat())
+        enemyManager.updateAll(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat())
+        effectManager.updateAll(deltaTimeMs)
+
+        checkCollisions()
+
+        if (playerShip.lifeState == PlayerLifeState.GAME_OVER) {
+            state = GameWorldState.GAME_OVER
+            onGameOver() // Notify the listener that the game has ended!
+            return // Stop the rest of the update for this frame
         }
 
+        //---------------
         // We can check if a new level has just started
         if (levelManager.state == LevelState.RUNNING && lastKnownState != LevelState.RUNNING) {
             // A new level has begun! Update the player's fire rate.
             playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
         }
 
+        if (levelManager.currentLevelNumber > lastKnownLevel) {
+            // Yes, we have advanced to a new level!
+            syncPlayerToLevel()
+        }
+
         lastKnownState = levelManager.state // Remember the state for the next frame
-        levelManager.update(deltaTimeMs)
-        enemyManager.updateAll(deltaTimeMs, screenHeight, screenWidth)
-        effectManager.updateAll(deltaTimeMs)
-        checkCollisions()
+        //---------------
     }
 
     private fun onEnemyDefeated(enemy: Enemy) {
@@ -142,13 +139,6 @@ class GameWorld(
             enemy.y + enemy.height / 2f
         )
         levelManager.onEnemyDefeated()
-    }
-
-    fun draw(canvas: Canvas, paint: Paint) {
-        starField.draw(paint, canvas)
-        enemyManager.drawAll(canvas, paint)
-        playerShip.draw(canvas, paint)
-        effectManager.drawAll(canvas, paint)
     }
 
     // Add this public method to expose the power-up queue
@@ -220,6 +210,17 @@ class GameWorld(
             }
 
         }
+    }
+
+    private fun syncPlayerToLevel() {
+        levelManager.currentLevelProperties?.let { properties ->
+            // Update the player ship with the rules from the new level data.
+            playerShip.upgradeFireRate(properties.playerFireRate)
+            // In the future, you could add more things here:
+            // playerShip.setSpeed(properties.playerSpeed)
+        }
+        // Update our tracker so this only runs once per level.
+        lastKnownLevel = levelManager.currentLevelNumber
     }
 
     fun getDebugData(): DebugData {

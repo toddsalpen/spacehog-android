@@ -26,8 +26,7 @@ class GameRenderer(
     // These will be initialized on the background thread
     private var gameWorld: GameWorld? = null
     private var hud: HUD? = null
-    // --- END ---
-
+    private val paint = Paint()
     // This will be updated by the GameScreen composable
     @Volatile private var playerTouchX: Float? = null
     @Volatile private var isPlayerFiring = false // <-- NEW property
@@ -79,7 +78,6 @@ class GameRenderer(
      */
     override fun run() {
         setupGame()
-
         var lastTime = System.currentTimeMillis()
         var waitTime: Long
 
@@ -93,13 +91,10 @@ class GameRenderer(
             val canvas = holder.lockCanvas()
             try {
                 synchronized(holder) {
-                    // --- CORRECTED LOOP LOGIC ---
-                    // We only update and draw if setup was successful
                     if (gameWorld != null && hud != null) {
                         update(deltaTime)
                         draw(canvas)
                     }
-                    // --- END OF CORRECTION ---
                 }
             } catch (e: Exception) {
                 Log.e("GameRenderer", "Exception during game loop", e)
@@ -153,18 +148,30 @@ class GameRenderer(
     }
 
     private fun draw(canvas: Canvas) {
-        // Clear the screen once
-        canvas.drawColor(Color.BLACK)
-
         // Get fresh, non-null references for this frame
         val currentWorld = gameWorld ?: return
         val currentHud = hud ?: return
 
-        // 1. Draw the game world (ships, bullets, effects)
-        currentWorld.draw(canvas, Paint())
+        canvas.drawColor(Color.BLACK)
 
-        // 2. Draw the user interface
-        // The HUD now has its OWN paint objects and manages them internally, so this is safe.
+        paint.color = Color.WHITE
+        for (star in currentWorld.starfieldManager.starStates) {
+            paint.alpha = (star.alpha * 255).toInt()
+            canvas.drawPoint(star.x, star.y, paint)
+        }
+
+        // Reset paint state to a safe default after custom drawing
+        paint.alpha = 255
+        paint.color = Color.WHITE
+
+        // 3. Render all other game world objects
+        // These objects have their own 'draw' methods that know how to render themselves.
+        currentWorld.enemyManager.drawAll(canvas, paint)
+        currentWorld.playerShip.draw(canvas, paint)
+        currentWorld.effectManager.drawAll(canvas, paint)
+
+        // --- RENDER THE HUD ---
+        // The HUD is drawn last so it is on top of everything.
         currentHud.draw(canvas)
     }
 
