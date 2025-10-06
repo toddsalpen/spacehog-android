@@ -5,11 +5,12 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import com.spacehog.data.JSONDataHandler
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.ui.common.StarfieldViewModel
 import com.spacehog.util.GameFocusManager
 import org.json.JSONArray
 
-class SettingsViewModel : StarfieldViewModel() {
+class SettingsViewModel(starfieldManager: StarfieldManager) : StarfieldViewModel(starfieldManager) {
 
     fun handleFocusModeToggle(
         context: Context,

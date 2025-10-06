@@ -1,6 +1,8 @@
 package com.spacehog.logic
 
+import android.util.Log
 import com.spacehog.ui.common.StarState
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.random.Random
 
 /**
@@ -8,9 +10,12 @@ import kotlin.random.Random
  * This is a PURE logic class with no knowledge of how to draw. It is platform-agnostic.
  */
 class StarfieldManager {
+    private val TAG = "StarfieldDebug"
+    private val stars = CopyOnWriteArrayList<StarState>()
 
-    private val stars = mutableListOf<StarState>()
-    val starStates: List<StarState> = stars // The public, read-only state for renderers to use
+    fun getStarStates(): List<StarState> {
+        return stars.toList()
+    }
 
     private var screenWidth = 0f
     private var screenHeight = 0f
@@ -30,6 +35,7 @@ class StarfieldManager {
                 )
             )
         }
+        Log.d(TAG, "Manager Initialized with ${stars.size} stars.")
     }
 
     fun update() {
@@ -42,5 +48,6 @@ class StarfieldManager {
                 star.x = Random.nextFloat() * screenWidth
             }
         }
+        Log.d(TAG, "Manager Updating. First star Y: ${stars.firstOrNull()?.y}")
     }
 }

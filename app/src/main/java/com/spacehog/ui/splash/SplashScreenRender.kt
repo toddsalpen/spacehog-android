@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.Point
 import android.media.MediaPlayer
 import android.os.Process
+import android.util.Log
 import android.view.SurfaceHolder
 import com.spacehog.R
 import com.spacehog.data.DrawablesManager
@@ -16,10 +17,10 @@ import com.spacehog.model.StarField
 
 class SplashScreenRenderer(
     context: Context,
-    private val holder: SurfaceHolder
+    private val holder: SurfaceHolder,
+    private val starfieldManager: StarfieldManager
 ) : Runnable {
-
-    private val starfieldManager = StarfieldManager()
+    private val TAG = "StarfieldDebug"
     private var thread: Thread? = null
     @Volatile private var isRunning = false
 
@@ -37,7 +38,6 @@ class SplashScreenRenderer(
         // Get screen size from the surface holder
         val screenRect = holder.surfaceFrame
         screenSize = Point(screenRect.width(), screenRect.height())
-        starfieldManager.initialize(screenRect.width().toFloat(), screenRect.height().toFloat())
 
         val drawablesManager = DrawablesManager(context)
         val logoBitmap = drawablesManager.getBitmap(R.drawable.space_hog)
@@ -95,7 +95,6 @@ class SplashScreenRenderer(
         }
     }
 
-
     private fun updateCanvas() {
         starfieldManager.update()
     }
@@ -105,8 +104,13 @@ class SplashScreenRenderer(
         canvas.drawColor(Color.BLACK)
 
         // 2. Draw the star field. This will modify the paint's alpha for each star.
+        val starStates = starfieldManager.getStarStates()
+        Log.d(TAG, "Drawing in Splash Renderer with ${starStates.size} stars.")
         paint.color = Color.WHITE
-        for (star in starfieldManager.starStates) {
+        for (star in starStates) {
+            if (star == starStates.first()) {
+                Log.d(TAG, "Splash: First star properties -> x=${star.x}, y=${star.y}, alpha=${star.alpha}")
+            }
             paint.alpha = (star.alpha * 255).toInt()
             canvas.drawPoint(star.x, star.y, paint)
         }

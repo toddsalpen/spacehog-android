@@ -31,6 +31,7 @@ class GameWorld(
     context: Context,
     private val holder: SurfaceHolder,
     private val scaler: Scaler, // <-- NEW: Receive the scaler as a parameter
+    val starfieldManager: StarfieldManager,
     private val onGameOver: () -> Unit
 ){
 
@@ -38,7 +39,6 @@ class GameWorld(
     val playerShip: PlayerShip
     val enemyManager: EnemyManager
     val effectManager: EffectManager
-    val starfieldManager: StarfieldManager
     val levelManager: LevelManager
 
     var state: GameWorldState = GameWorldState.PLAYING
@@ -73,8 +73,7 @@ class GameWorld(
             y = screenRect.height() - scaler.scaleY(300f),
             bulletPoolSize = bulletPoolSize
         )
-        starfieldManager = StarfieldManager()
-        starfieldManager.initialize(screenWidth, screenHeight)
+
         enemyManager = EnemyManager(assetLibrary, scaler) // todo: implement new scale for screen resolution
         levelManager = LevelManager(enemyManager, scaler) // todo: implement new scale for screen resolution
         effectManager = EffectManager(assetLibrary)

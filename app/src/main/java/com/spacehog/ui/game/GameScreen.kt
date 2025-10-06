@@ -29,6 +29,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.util.GameFocusManager
 import com.spacehog.util.ImmersiveModeEffect
 
@@ -36,7 +37,8 @@ import com.spacehog.util.ImmersiveModeEffect
 @Composable
 fun GameScreen(
     navController: NavController,
-    gameFocusManager: GameFocusManager // <-- Accept the new parameter
+    gameFocusManager: GameFocusManager, // <-- Accept the new parameter
+    starfieldManager: StarfieldManager
 ) {
 
     // 1. Activate our Immersive Mode effect, which hides the system bars.
@@ -110,7 +112,7 @@ fun GameScreen(
                             // --- START OF THE FIX ---
                             // We create the GameRenderer and pass it a lambda function.
                             // This function will be the 'onGameOver' callback.
-                            val newRenderer = GameRenderer(context, holder) {
+                            val newRenderer = GameRenderer(context, holder, starfieldManager) {
                                 // This block of code will execute on the Main thread
                                 // when the GameWorld tells the renderer the game is over.
                                 isGameOver = true

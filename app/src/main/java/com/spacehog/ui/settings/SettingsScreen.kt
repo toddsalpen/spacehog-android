@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,17 +39,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.ui.common.StarfieldBackground
+import com.spacehog.ui.common.ViewModelFactory
 import com.spacehog.util.ImmersiveModeEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: SettingsViewModel = viewModel()
+    starfieldManager: StarfieldManager
 ) {
     // Make this screen fullscreen
     ImmersiveModeEffect()
+
+    val factory = ViewModelFactory(starfieldManager)
+    val viewModel: SettingsViewModel = viewModel(factory = factory)
     val context = LocalContext.current
     val isFocusEnabled by remember { derivedStateOf { viewModel.isFocusModeEnabled(context) } }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -57,15 +63,10 @@ fun SettingsScreen(
 
     // This Box allows us to layer our background and UI.
     // BoxWithConstraints gives us the screen dimensions to initialize the starfield.
-    BoxWithConstraints(modifier = Modifier
+    Box(modifier = Modifier
         .fillMaxSize()
         .background(Color.Black)
     ) {
-
-        // This effect will run once when the screen dimensions are first known.
-        LaunchedEffect(Unit) {
-            viewModel.initializeStarfield(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
-        }
 
         // --- LAYER 1: The Background ---
         StarfieldBackground(stars = viewModel.stars)

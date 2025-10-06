@@ -11,28 +11,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.ui.common.StarfieldBackground
+import com.spacehog.ui.common.ViewModelFactory
 import com.spacehog.util.ImmersiveModeEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuScreen(
     navController: NavController,
-    viewModel: MenuViewModel = viewModel() // <-- USE THE NEW VIEWMODEL
+    starfieldManager: StarfieldManager // <-- USE THE NEW VIEWMODEL
 ) {
     // Make this screen fullscreen
     ImmersiveModeEffect()
+    // 1. Create an instance of our custom factory.
+    val factory = ViewModelFactory(starfieldManager)
+    // 2. Provide this factory to the viewModel() function.
+    val viewModel: MenuViewModel = viewModel(factory = factory)
 
-    BoxWithConstraints(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black) // Solid black background
     ) {
-        // Initialize the starfield with the screen dimensions
-        LaunchedEffect(Unit) {
-            viewModel.initializeStarfield(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
-        }
-
         // --- LAYER 1: The Background ---
         StarfieldBackground(stars = viewModel.stars)
 

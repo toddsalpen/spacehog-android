@@ -9,11 +9,13 @@ import android.view.SurfaceHolder
 import com.spacehog.logic.DebugData
 import com.spacehog.logic.GameWorld
 import com.spacehog.logic.Scaler
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.model.LevelState
 
 class GameRenderer(
     private val context: Context,
     private val holder: SurfaceHolder,
+    val starfieldManager: StarfieldManager,
     val onGameOver: () -> Unit
 ) : Runnable {
     // --- Core Threading and Loop ---
@@ -45,7 +47,7 @@ class GameRenderer(
             )
 
             // 2. It then passes this single Scaler instance to both the GameWorld and the HUD.
-            gameWorld = GameWorld(context, holder, scaler, onGameOver = onGameOver)
+            gameWorld = GameWorld(context, holder, scaler, starfieldManager, onGameOver = onGameOver)
             hud = HUD(
                 holder.surfaceFrame.height().toFloat(),
                 holder.surfaceFrame.width().toFloat(),
@@ -155,9 +157,10 @@ class GameRenderer(
         canvas.drawColor(Color.BLACK)
 
         paint.color = Color.WHITE
-        for (star in currentWorld.starfieldManager.starStates) {
+        for (star in currentWorld.starfieldManager.getStarStates()) {
             paint.alpha = (star.alpha * 255).toInt()
-            canvas.drawPoint(star.x, star.y, paint)
+            //canvas.drawPoint(star.x, star.y, paint)
+            canvas.drawCircle(star.x, star.y, 2f, paint)
         }
 
         // Reset paint state to a safe default after custom drawing

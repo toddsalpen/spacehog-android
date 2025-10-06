@@ -7,18 +7,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.util.ImmersiveModeEffect
 
 @Composable
 fun SplashScreen(
+    starfieldManager: StarfieldManager,
     onFinish: () -> Unit
 ) {
 
@@ -62,7 +61,7 @@ fun SplashScreen(
                     holder.addCallback(object : SurfaceHolder.Callback {
                         override fun surfaceCreated(holder: SurfaceHolder) {
                             // The renderer just does its animation now. The composable decides when to leave.
-                            renderer.value = SplashScreenRenderer(context, holder)
+                            renderer.value = SplashScreenRenderer(context, holder, starfieldManager)
                             renderer.value?.resume()
                         }
                         override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}

@@ -82,7 +82,7 @@ class StarField(width: Float, height: Float, x: Float, y: Float) : GameObject(wi
      * Draws every star onto the provided canvas.
      */
     fun draw(p: Paint, c: Canvas) {
-        p.color = Color.GRAY
+        p.color = Color.WHITE
         for (star in stars) {
             star.draw(p, c)
         }

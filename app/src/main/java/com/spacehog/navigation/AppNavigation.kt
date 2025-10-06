@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.ui.game.GameScreen
 import com.spacehog.ui.menu.MenuScreen
 import com.spacehog.ui.splash.SplashScreen
@@ -12,32 +13,38 @@ import com.spacehog.util.GameFocusManager
 
 @Composable
 fun AppNavigation(
-    gameFocusManager: GameFocusManager
+    gameFocusManager: GameFocusManager,
+    starfieldManager: StarfieldManager
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "splash") {
 
         composable("splash") {
-            SplashScreen(onFinish = {
-                    navController.navigate("menu") {
-                        popUpTo("splash") { inclusive = true }
-                    }
-            })
+            SplashScreen(starfieldManager = starfieldManager) {
+                navController.navigate("menu") { popUpTo("splash") { inclusive = true } }
+            }
         }
 
         composable("menu") {
             // Your MenuScreen composable will go here
             // For now, we can navigate to settings as a placeholder
-            MenuScreen(navController = navController)
+            MenuScreen(navController = navController, starfieldManager = starfieldManager)
         }
 
         // Add the Game route (for now, it can be a placeholder)
         composable("game") {
-            GameScreen(navController = navController, gameFocusManager = gameFocusManager)
+            GameScreen(
+                navController = navController,
+                gameFocusManager = gameFocusManager,
+                starfieldManager = starfieldManager
+            )
         }
 
         composable("settings") {
-            SettingsScreen(onNavigateBack = { navController.popBackStack() })
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                starfieldManager = starfieldManager
+            )
         }
     }
 }

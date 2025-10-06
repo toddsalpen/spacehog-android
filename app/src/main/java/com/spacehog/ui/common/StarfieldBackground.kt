@@ -1,5 +1,6 @@
 package com.spacehog.ui.common
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -23,7 +24,10 @@ data class StarState(
 // A Composable that knows how to draw a list of stars.
 @Composable
 fun StarfieldBackground(stars: List<StarState>) {
+    val TAG = "StarfieldDebug"
     val paint = remember { Paint().apply { color = Color.White } }
+
+    Log.d(TAG, "Recomposing StarfieldBackground with ${stars.size} stars.")
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         drawIntoCanvas { canvas ->
