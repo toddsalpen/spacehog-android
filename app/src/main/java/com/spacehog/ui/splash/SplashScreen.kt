@@ -21,14 +21,8 @@ fun SplashScreen(
     onFinish: () -> Unit
 ) {
 
-    // This state prevents onFinish from being called multiple times.
     val hasFinished = remember { mutableStateOf(false) }
-
-    // This state will hold our renderer instance
     val renderer = remember { mutableStateOf<SplashScreenRenderer?>(null) }
-
-    // This effect handles setting the window to immersive mode
-    ImmersiveModeEffect()
 
     DisposableEffect(Unit) {
         onDispose {
@@ -42,7 +36,6 @@ fun SplashScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
-                        // A tap is now the primary way to finish.
                         if (!hasFinished.value) {
                             hasFinished.value = true
                             onFinish()
@@ -51,7 +44,6 @@ fun SplashScreen(
                 )
             }
     ) {
-        // The AndroidView composable is the bridge to the old View system
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->

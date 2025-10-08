@@ -50,8 +50,6 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     starfieldManager: StarfieldManager
 ) {
-    // Make this screen fullscreen
-    ImmersiveModeEffect()
 
     val factory = ViewModelFactory(starfieldManager)
     val viewModel: SettingsViewModel = viewModel(factory = factory)
@@ -68,10 +66,7 @@ fun SettingsScreen(
         .background(Color.Black)
     ) {
 
-        // --- LAYER 1: The Background ---
         StarfieldBackground(stars = viewModel.stars)
-
-        // --- LAYER 2: The UI ---
         Scaffold(
             // Make the Scaffold transparent so we can see the starfield behind it
             containerColor = Color.Transparent,
@@ -184,7 +179,6 @@ fun SettingsScreen(
 }
 
 
-// --- Helper composables for a clean settings list ---
 @Composable
 fun SettingsItem(title: String, summary: String, onClick: () -> Unit) {
     Row(

@@ -16,6 +16,7 @@ import com.spacehog.logic.StarfieldManager
 import com.spacehog.navigation.AppNavigation
 import com.spacehog.ui.theme.SpaceHogTheme
 import com.spacehog.util.GameFocusManager
+import com.spacehog.util.ImmersiveModeEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -25,49 +26,46 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // CRITICAL: Enable edge-to-edge display FIRST
         enableEdgeToEdge()
+
+        // Start the starfield animation loop
         lifecycleScope.launch {
             while (true) {
                 starfieldManager.tick()
                 delay(16) // Update at ~60fps
             }
         }
+
         setContent {
             SpaceHogTheme {
+                // Apply immersive mode at the app level - THIS IS THE KEY CHANGE
+                ImmersiveModeEffect()
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // The GameFocusManager is still created here and passed down,
-                    // so other screens can use it.
-                    val gameFocusManager = remember { GameFocusManager(this) }
+                    val gameFocusManager = remember { GameFocusManager(this@MainActivity) }
 
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                        // This will only run a single time when the app starts
-                        // and screen dimensions are first known.
+                        // Initialize starfield with screen dimensions
                         LaunchedEffect(Unit) {
                             starfieldManager.initialize(
                                 constraints.maxWidth.toFloat(),
                                 constraints.maxHeight.toFloat()
                             )
                         }
+
+                        // Navigate through the app
+                        AppNavigation(
+                            gameFocusManager = gameFocusManager,
+                            starfieldManager = starfieldManager
+                        )
                     }
-                    // All the lifecycle effects and permission launchers are now gone.
-                    // The app will proceed directly to the splash screen.
-                    AppNavigation(
-                        gameFocusManager = gameFocusManager,
-                        starfieldManager = starfieldManager // <-- Pass it down
-                    )
                 }
             }
         }
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    SpaceHogTheme {
-//        AppNavigation()
-//    }
-//}

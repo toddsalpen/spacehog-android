@@ -26,9 +26,9 @@ fun AppNavigation(
         }
 
         composable("menu") {
-            // Your MenuScreen composable will go here
-            // For now, we can navigate to settings as a placeholder
-            MenuScreen(navController = navController, starfieldManager = starfieldManager)
+            MenuScreen(
+                navController = navController,
+                starfieldManager = starfieldManager)
         }
 
         // Add the Game route (for now, it can be a placeholder)
