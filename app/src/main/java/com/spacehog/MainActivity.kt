@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import com.spacehog.logic.StarfieldManager
 import com.spacehog.navigation.AppNavigation
 import com.spacehog.ui.theme.SpaceHogTheme
 import com.spacehog.util.GameFocusManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -20,6 +23,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycleScope.launch {
+            while (true) {
+                starfieldManager.tick()
+                delay(16) // Update at ~60fps
+            }
+        }
         enableEdgeToEdge()
         setContent {
             SpaceHogTheme {

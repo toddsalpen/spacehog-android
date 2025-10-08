@@ -96,29 +96,18 @@ class SplashScreenRenderer(
     }
 
     private fun updateCanvas() {
-        starfieldManager.update()
     }
 
     private fun drawCanvas(canvas: Canvas) {
-        // 1. Fill the entire canvas with a solid black background.
         canvas.drawColor(Color.BLACK)
 
-        // 2. Draw the star field. This will modify the paint's alpha for each star.
-        val starStates = starfieldManager.getStarStates()
-        Log.d(TAG, "Drawing in Splash Renderer with ${starStates.size} stars.")
         paint.color = Color.WHITE
-        for (star in starStates) {
-            if (star == starStates.first()) {
-                Log.d(TAG, "Splash: First star properties -> x=${star.x}, y=${star.y}, alpha=${star.alpha}")
-            }
-            paint.alpha = (star.alpha * 255).toInt()
+        for (star in starfieldManager.getStarStates()) {
+            paint.alpha = (star.alpha * 255).toInt().coerceIn(0, 255)
             canvas.drawPoint(star.x, star.y, paint)
         }
 
-        // 3. CRITICAL FIX: Reset the paint's alpha to fully opaque before drawing the next thing.
-        paint.alpha = 255 // 255 means fully opaque (not transparent)
-
-        // 4. Now draw the logo. It will be drawn with the corrected, fully opaque paint.
+        paint.alpha = 255
         logo.draw(canvas, paint)
     }
 

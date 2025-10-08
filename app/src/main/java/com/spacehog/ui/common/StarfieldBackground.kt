@@ -27,8 +27,6 @@ fun StarfieldBackground(stars: List<StarState>) {
     val TAG = "StarfieldDebug"
     val paint = remember { Paint().apply { color = Color.White } }
 
-    Log.d(TAG, "Recomposing StarfieldBackground with ${stars.size} stars.")
-
     Canvas(modifier = Modifier.fillMaxSize()) {
         drawIntoCanvas { canvas ->
             for (star in stars) {

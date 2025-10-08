@@ -14,7 +14,7 @@ class StarfieldManager {
     private val stars = CopyOnWriteArrayList<StarState>()
 
     fun getStarStates(): List<StarState> {
-        return stars.toList()
+        return stars
     }
 
     private var screenWidth = 0f
@@ -35,10 +35,9 @@ class StarfieldManager {
                 )
             )
         }
-        Log.d(TAG, "Manager Initialized with ${stars.size} stars.")
     }
 
-    fun update() {
+    fun tick() {
         if (screenHeight == 0f) return
 
         for (star in stars) {
@@ -48,6 +47,5 @@ class StarfieldManager {
                 star.x = Random.nextFloat() * screenWidth
             }
         }
-        Log.d(TAG, "Manager Updating. First star Y: ${stars.firstOrNull()?.y}")
     }
 }

@@ -48,7 +48,6 @@ class DrawablesManager(private val context: Context) {
      * to free up memory (e.g., when leaving a game screen).
      */
     fun clearCache() {
-        Log.d("DrawablesManager", "Clearing bitmap cache.")
         bitmapCache.clear()
     }
 }

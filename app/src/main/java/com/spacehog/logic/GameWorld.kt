@@ -30,7 +30,7 @@ enum class GameWorldState {
 class GameWorld(
     context: Context,
     private val holder: SurfaceHolder,
-    private val scaler: Scaler, // <-- NEW: Receive the scaler as a parameter
+    private val scaler: Scaler,
     val starfieldManager: StarfieldManager,
     private val onGameOver: () -> Unit
 ){
@@ -52,7 +52,6 @@ class GameWorld(
         Log.d("GameWorld", "Initializing GameWorld...")
         assetLibrary = AssetLibrary(context)
         val screenRect = holder.surfaceFrame
-        // Bullet Pool Calculation
         val screenHeight = holder.surfaceFrame.height().toFloat()
         val screenWidth = holder.surfaceFrame.width().toFloat()
         val bulletSpeed = BulletType.PLAYER_STANDARD.speed.let { if(it < 0) it * -1 else it }
@@ -64,7 +63,6 @@ class GameWorld(
         val playerWidth = scaler.getSpriteWidth(1f / 7f)
         val playerHeight = playerWidth * playerAspectRatio
 
-        // Player Ship Creation
         playerShip = PlayerShip(
             assetLibrary = assetLibrary,
             width = playerWidth,
@@ -74,12 +72,11 @@ class GameWorld(
             bulletPoolSize = bulletPoolSize
         )
 
-        enemyManager = EnemyManager(assetLibrary, scaler) // todo: implement new scale for screen resolution
-        levelManager = LevelManager(enemyManager, scaler) // todo: implement new scale for screen resolution
+        enemyManager = EnemyManager(assetLibrary, scaler)
+        levelManager = LevelManager(enemyManager, scaler)
         effectManager = EffectManager(assetLibrary)
 
-        // Set the player's initial fire rate based on the first level's data
-        playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
+        //playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
 
         syncPlayerToLevel()
 
@@ -88,7 +85,6 @@ class GameWorld(
     fun update(deltaTimeMs: Long, playerTouchX: Float?, isPlayerFiring: Boolean) {
         if (state == GameWorldState.GAME_OVER) return
 
-        starfieldManager.update()
         levelManager.update(deltaTimeMs)
 
         if (isPlayerFiring) {
@@ -108,30 +104,27 @@ class GameWorld(
 
         if (playerShip.lifeState == PlayerLifeState.GAME_OVER) {
             state = GameWorldState.GAME_OVER
-            onGameOver() // Notify the listener that the game has ended!
-            return // Stop the rest of the update for this frame
+            onGameOver()
+            return
         }
 
+//        if (levelManager.state == LevelState.RUNNING && lastKnownState != LevelState.RUNNING) {
+//            playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
+//        }
+//
+//        if (levelManager.currentLevelNumber > lastKnownLevel) {
+//            syncPlayerToLevel()
+//        }
+//
+//        lastKnownState = levelManager.state
         //---------------
-        // We can check if a new level has just started
-        if (levelManager.state == LevelState.RUNNING && lastKnownState != LevelState.RUNNING) {
-            // A new level has begun! Update the player's fire rate.
-            playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
-        }
-
         if (levelManager.currentLevelNumber > lastKnownLevel) {
-            // Yes, we have advanced to a new level!
             syncPlayerToLevel()
         }
-
-        lastKnownState = levelManager.state // Remember the state for the next frame
-        //---------------
     }
 
     private fun onEnemyDefeated(enemy: Enemy) {
-        // 1. Add score
         this.score += enemy.type.score
-        // 2. Spawn explosion
         effectManager.spawnEffect(
             EffectType.ENEMY_EXPLOSION,
             enemy.x + enemy.width / 2f,
@@ -140,7 +133,6 @@ class GameWorld(
         levelManager.onEnemyDefeated()
     }
 
-    // Add this public method to expose the power-up queue
     fun getPowerUpQueue(): List<PowerUpType> {
         return playerShip.getPowerUpQueue()
     }
@@ -150,14 +142,12 @@ class GameWorld(
         val activeEnemies = enemyManager.getActiveEnemies().toList()
         val activeEnemyBullets = enemyManager.getAllEnemyBullets().toList()
 
-        // --- CHECK 1: Player Bullets vs. Enemies ---
         for (bullet in activePlayerBullets) {
             for (enemy in activeEnemies) {
                 if (bullet.isActive && enemy.isActive && bullet.rectCollision(enemy)) {
                     bullet.onCollision()
                     enemy.takeDamage(bullet.type.damage)
 
-                    // If the enemy was defeated by the bullet, call our new central method.
                     if (!enemy.isActive) {
                         onEnemyDefeated(enemy)
                     }
@@ -167,7 +157,6 @@ class GameWorld(
         }
 
         if (playerShip.lifeState == PlayerLifeState.ALIVE) {
-            // --- CHECK 2: Enemy Bullets vs. Player ---
             for (bullet in activeEnemyBullets) {
                 if (bullet.isActive && bullet.rectCollision(playerShip)) {
                     bullet.onCollision()
@@ -183,20 +172,16 @@ class GameWorld(
                 }
             }
 
-            // --- CHECK 3: Enemies vs. Player (Ramming Damage) ---
             for (enemy in activeEnemies) {
                 if (enemy.isActive && enemy.rectCollision(playerShip)) {
 
-                    // Apply damage to both parties
                     val wasPlayerDestroyed = playerShip.takeDamage(5)
                     enemy.takeDamage(5)
 
-                    // If the ENEMY was destroyed by the collision, call our new central method.
                     if (!enemy.isActive) {
                         onEnemyDefeated(enemy)
                     }
 
-                    // If the PLAYER was destroyed by the collision, spawn their explosion.
                     if (wasPlayerDestroyed) {
                         effectManager.spawnEffect(
                             EffectType.PLAYER_EXPLOSION,

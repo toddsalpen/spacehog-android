@@ -19,7 +19,6 @@ abstract class StarfieldViewModel(
     init {
         viewModelScope.launch {
             while (true) {
-                starfieldManager.update()
                 stars = starfieldManager.getStarStates()
                 delay(16)
             }
