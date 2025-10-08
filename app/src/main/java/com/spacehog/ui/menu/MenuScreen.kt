@@ -22,11 +22,8 @@ fun MenuScreen(
     navController: NavController,
     starfieldManager: StarfieldManager // <-- USE THE NEW VIEWMODEL
 ) {
-    // Make this screen fullscreen
-    ImmersiveModeEffect()
-    // 1. Create an instance of our custom factory.
+
     val factory = ViewModelFactory(starfieldManager)
-    // 2. Provide this factory to the viewModel() function.
     val viewModel: MenuViewModel = viewModel(factory = factory)
 
     Box(
@@ -34,10 +31,7 @@ fun MenuScreen(
             .fillMaxSize()
             .background(Color.Black) // Solid black background
     ) {
-        // --- LAYER 1: The Background ---
         StarfieldBackground(stars = viewModel.stars)
-
-        // --- LAYER 2: The UI ---
         Scaffold(
             containerColor = Color.Transparent, // See-through Scaffold
             topBar = {

@@ -22,19 +22,24 @@ fun ImmersiveModeEffect() {
         insetsController.hide(WindowInsetsCompat.Type.systemBars())
 
         // Set the behavior for when user swipes to reveal system bars
+        // They will show temporarily and then hide again automatically
         insetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
-        // Keep screen on during gameplay
+        // Keep screen on throughout the app
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Make the status bar and navigation bar fully transparent
+        // Make the content draw behind system bars (edge-to-edge)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         onDispose {
-            // Restore system bars when leaving the screen
-            insetsController.show(WindowInsetsCompat.Type.systemBars())
+            // DON'T restore system bars during navigation
+            // Only clear the keep screen on flag when the app is truly disposed
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+            // Only restore system bars when the entire app is closing
+            // (This onDispose rarely runs since it's at the app root level)
+            insetsController.show(WindowInsetsCompat.Type.systemBars())
             WindowCompat.setDecorFitsSystemWindows(window, true)
         }
     }
