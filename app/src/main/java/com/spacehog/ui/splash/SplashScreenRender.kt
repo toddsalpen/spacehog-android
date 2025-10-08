@@ -7,23 +7,24 @@ import android.graphics.Paint
 import android.graphics.Point
 import android.media.MediaPlayer
 import android.os.Process
+import android.util.Log
 import android.view.SurfaceHolder
 import com.spacehog.R
 import com.spacehog.data.DrawablesManager
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.model.Sprite
 import com.spacehog.model.StarField
 
 class SplashScreenRenderer(
     context: Context,
     private val holder: SurfaceHolder,
-    private val onSplashFinished: () -> Unit // Callback to trigger navigation
+    private val starfieldManager: StarfieldManager
 ) : Runnable {
-
+    private val TAG = "StarfieldDebug"
     private var thread: Thread? = null
     @Volatile private var isRunning = false
 
     private val screenSize: Point
-    private val starField: StarField
     private val logo: Sprite
     private val paint = Paint()
     private val mediaPlayer: MediaPlayer?
@@ -37,12 +38,6 @@ class SplashScreenRenderer(
         // Get screen size from the surface holder
         val screenRect = holder.surfaceFrame
         screenSize = Point(screenRect.width(), screenRect.height())
-
-        // --- THE FIX ---
-        // Create the StarField directly, not the wrapper Background class.
-        starField = StarField(screenSize.x.toFloat(), screenSize.y.toFloat(), 0f, 0f)
-        starField.generateNewStars()
-        // --- END OF FIX ---
 
         val drawablesManager = DrawablesManager(context)
         val logoBitmap = drawablesManager.getBitmap(R.drawable.space_hog)
@@ -100,52 +95,48 @@ class SplashScreenRenderer(
         }
     }
 
-    fun onTouch() {
-        // When touched, trigger the callback to navigate away
-        if (isRunning) {
-            onSplashFinished()
-        }
-    }
-
     private fun updateCanvas() {
-        starField.update()
     }
 
     private fun drawCanvas(canvas: Canvas) {
-        // 1. Fill the entire canvas with a solid black background.
         canvas.drawColor(Color.BLACK)
 
-        // 2. Draw the star field. This will modify the paint's alpha for each star.
-        starField.draw(paint, canvas)
+        paint.color = Color.WHITE
+        for (star in starfieldManager.getStarStates()) {
+            paint.alpha = (star.alpha * 255).toInt().coerceIn(0, 255)
+            canvas.drawPoint(star.x, star.y, paint)
+        }
 
-        // 3. CRITICAL FIX: Reset the paint's alpha to fully opaque before drawing the next thing.
-        paint.alpha = 255 // 255 means fully opaque (not transparent)
-
-        // 4. Now draw the logo. It will be drawn with the corrected, fully opaque paint.
+        paint.alpha = 255
         logo.draw(canvas, paint)
     }
 
     fun resume() {
-        isRunning = true
-        thread = Thread(this)
-        thread?.start()
+        if (thread == null || !thread!!.isAlive) {
+            isRunning = true
+            thread = Thread(this)
+            thread?.start()
+        }
     }
 
     fun pause() {
         isRunning = false
         mediaPlayer?.pause()
-        var retry = true
-        while (retry) {
-            try {
-                thread?.join()
-                retry = false
-            } catch (e: InterruptedException) {
-                // Handle exception
-            }
+        try {
+            thread?.join(200) // Wait a bit for the thread to finish
+        } catch (e: InterruptedException) {
+            //
         }
     }
 
     fun stop() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+    }
+
+    // A new method for when the screen is fully destroyed
+    fun stopAndRelease() {
+        pause() // Ensure the thread is stopped
         mediaPlayer?.stop()
         mediaPlayer?.release()
     }

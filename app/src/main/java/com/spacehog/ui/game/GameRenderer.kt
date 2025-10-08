@@ -9,48 +9,41 @@ import android.view.SurfaceHolder
 import com.spacehog.logic.DebugData
 import com.spacehog.logic.GameWorld
 import com.spacehog.logic.Scaler
+import com.spacehog.logic.StarfieldManager
 import com.spacehog.model.LevelState
 
 class GameRenderer(
     private val context: Context,
     private val holder: SurfaceHolder,
+    val starfieldManager: StarfieldManager,
     val onGameOver: () -> Unit
 ) : Runnable {
-    // --- Core Threading and Loop ---
     private var thread: Thread? = null
     @Volatile private var isRunning = false
     private val targetFPS = 60
     private val targetTimeMillis = (1000 / targetFPS).toLong()
-
-    // --- NEW STRUCTURE ---
-    // These will be initialized on the background thread
     private var gameWorld: GameWorld? = null
     private var hud: HUD? = null
-    // --- END ---
-
-    // This will be updated by the GameScreen composable
+    private val paint = Paint()
+    @Volatile var safeAreaTop: Float = 0f
     @Volatile private var playerTouchX: Float? = null
-    @Volatile private var isPlayerFiring = false // <-- NEW property
+    @Volatile private var isPlayerFiring = false
 
     init {
-        Log.d("GameRenderer", "Renderer instance created (lightweight init).")
     }
 
     private fun setupGame() {
-        Log.d("GameRenderer", "Setting up game assets on background thread...")
+        Log.d("GameRenderer", "Setting up game assets...")
         try {
-            // 1. The GameRenderer is the first to know the screen size, so it creates the Scaler.
             val scaler = Scaler(
                 holder.surfaceFrame.width().toFloat(),
                 holder.surfaceFrame.height().toFloat()
             )
-
-            // 2. It then passes this single Scaler instance to both the GameWorld and the HUD.
-            gameWorld = GameWorld(context, holder, scaler, onGameOver = onGameOver)
+            gameWorld = GameWorld(context, holder, scaler, starfieldManager, onGameOver = onGameOver)
             hud = HUD(
                 holder.surfaceFrame.height().toFloat(),
                 holder.surfaceFrame.width().toFloat(),
-                gameWorld!!.assetLibrary, // Use the asset library from the game world
+                gameWorld!!.assetLibrary,
                 scaler = scaler
             )
             Log.d("GameRenderer", "Game setup complete.")
@@ -59,16 +52,9 @@ class GameRenderer(
             isRunning = false
         }
     }
-
-    // This method will be called from the UI's "Restart" button
     fun restartGame() {
-        // We create a brand new GameWorld instance, which resets everything:
-        // score, player lives, level manager, etc.
-        // It's already on the background thread, but let's be safe.
         thread?.let {
             if (it.isAlive) {
-                // In a more complex game, we'd use a message queue,
-                // but for now, we can just re-run setup.
                 setupGame()
             }
         }
@@ -79,7 +65,6 @@ class GameRenderer(
      */
     override fun run() {
         setupGame()
-
         var lastTime = System.currentTimeMillis()
         var waitTime: Long
 
@@ -93,13 +78,10 @@ class GameRenderer(
             val canvas = holder.lockCanvas()
             try {
                 synchronized(holder) {
-                    // --- CORRECTED LOOP LOGIC ---
-                    // We only update and draw if setup was successful
                     if (gameWorld != null && hud != null) {
                         update(deltaTime)
                         draw(canvas)
                     }
-                    // --- END OF CORRECTION ---
                 }
             } catch (e: Exception) {
                 Log.e("GameRenderer", "Exception during game loop", e)
@@ -122,7 +104,6 @@ class GameRenderer(
         }
     }
 
-    // The bridge from the UI now has more information
     fun onPlayerInput(touchX: Float?, isFiring: Boolean) {
         this.playerTouchX = touchX
         this.isPlayerFiring = isFiring
@@ -130,7 +111,6 @@ class GameRenderer(
 
     private fun update(deltaTimeMs: Long) {
 
-        // Get all the data from the world
         val currentScore = gameWorld?.score ?: 0
         val currentPowerUpQueue = gameWorld?.getPowerUpQueue() ?: emptyList()
         val currentPlayerHp = gameWorld?.playerShip?.hp ?: 0
@@ -139,7 +119,6 @@ class GameRenderer(
         val currentLevelNumber = gameWorld?.levelManager?.currentLevelNumber ?: 0
         val currentDebugData = gameWorld?.getDebugData() ?: DebugData()
 
-        // Delegate the new, richer input state to the GameWorld
         gameWorld?.update(deltaTimeMs, playerTouchX, isPlayerFiring)
 
         hud?.update(
@@ -153,19 +132,25 @@ class GameRenderer(
     }
 
     private fun draw(canvas: Canvas) {
-        // Clear the screen once
-        canvas.drawColor(Color.BLACK)
-
-        // Get fresh, non-null references for this frame
         val currentWorld = gameWorld ?: return
         val currentHud = hud ?: return
 
-        // 1. Draw the game world (ships, bullets, effects)
-        currentWorld.draw(canvas, Paint())
+        canvas.drawColor(Color.BLACK)
 
-        // 2. Draw the user interface
-        // The HUD now has its OWN paint objects and manages them internally, so this is safe.
-        currentHud.draw(canvas)
+        paint.color = Color.WHITE
+        for (star in currentWorld.starfieldManager.getStarStates()) {
+            paint.alpha = (star.alpha * 255).toInt()
+            canvas.drawCircle(star.x, star.y, 2f, paint)
+        }
+
+        paint.alpha = 255
+        paint.color = Color.WHITE
+
+        currentWorld.enemyManager.drawAll(canvas, paint)
+        currentWorld.playerShip.draw(canvas, paint)
+        currentWorld.effectManager.drawAll(canvas, paint)
+
+        currentHud.draw(canvas, safeAreaTop)
     }
 
     fun resume() {
@@ -173,24 +158,19 @@ class GameRenderer(
             isRunning = true
             thread = Thread(this)
             thread?.start()
-            Log.d("GameRenderer", "Thread resumed.")
         }
     }
 
     fun pause() {
-        Log.d("GameRenderer", "Attempting to pause thread.")
         isRunning = false
         try {
             thread?.join(200)
         } catch (e: InterruptedException) {
-            // Do nothing
         }
         thread = null
     }
 
-    // This is called from GameScreen's onDoubleTap
     fun onActivatePowerUp() {
-        // Pass the command to the game world's player ship
         gameWorld?.playerShip?.activateNextPowerUp()
     }
 }

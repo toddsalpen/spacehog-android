@@ -21,7 +21,17 @@ class HUD(
     private val assetLibrary: AssetLibrary,
     private val scaler: Scaler
 ) {
+
+
+    private val topBarY: Float = scaler.scaleY(75f) // Vertical center for the top bar
+    private val horizontalMargin: Float = scaler.scaleX(25f) // Margin from the screen edges
     // --- Paints (The "Brushes" for our UI) ---
+
+    private val barFramePaint = Paint().apply {
+        color = Color.DKGRAY
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+    }
 
     private val scorePaint = Paint().apply {
         color = Color.WHITE
@@ -106,11 +116,11 @@ class HUD(
      * The main draw entry point. It calls all the individual component draw methods.
      * This makes the drawing order explicit and easy to change.
      */
-    fun draw(canvas: Canvas) {
+    fun draw(canvas: Canvas, safeAreaTop: Float) {
         // Draw in logical order (bottom layers first)
-        drawScoreCounter(canvas)
-        drawLivesCounter(canvas)
-        drawHealthBar(canvas)
+        drawScoreCounter(canvas, safeAreaTop)
+        drawLivesCounter(canvas, safeAreaTop)
+        drawHealthBar(canvas, safeAreaTop)
         drawPowerUpQueue(canvas)
         drawLevelMessages(canvas)
 
@@ -122,21 +132,20 @@ class HUD(
     // --- NEW HELPER METHODS FOR EACH COMPONENT ---
 
     @SuppressLint("DefaultLocale")
-    private fun drawScoreCounter(canvas: Canvas) {
-        val scoreText = String.format("%010d", score)
-        val xPos = scaler.scaleX(50f)
-        val yPos = scaler.scaleY(80f)
-        canvas.drawText(scoreText, xPos, yPos, scorePaint)
+    private fun drawScoreCounter(canvas: Canvas, safeAreaTop: Float) {
+        val scoreText = String.format("%09d", score)
+        //val xPos = scaler.scaleX(50f)
+        val yPos = safeAreaTop + topBarY - (scorePaint.descent() + scorePaint.ascent()) / 2f
+        canvas.drawText(scoreText, horizontalMargin, yPos, scorePaint)
     }
 
-    private fun drawLivesCounter(canvas: Canvas) {
-        val scoreY = scaler.scaleY(80f) // Anchor below the score
-        val livesTopY = scoreY + 30f
-        val iconSize = scaler.scaleX(50f)
-        val textPadding = 15f
-        val iconX = scaler.scaleX(50f)
+    private fun drawLivesCounter(canvas: Canvas, safeAreaTop: Float) {
 
-        val iconRect = RectF(iconX, livesTopY, iconX + iconSize, livesTopY + iconSize)
+        val livesTopY = safeAreaTop + topBarY + scaler.scaleY(20f)
+        val iconSize = scaler.scaleX(45f)
+        val textPadding = scaler.scaleX(15f)
+
+        val iconRect = RectF(horizontalMargin, livesTopY, horizontalMargin + iconSize, livesTopY + iconSize)
         canvas.drawBitmap(playerShipIcon, null, iconRect, null)
 
         val livesText = "x $playerLives"
@@ -144,18 +153,21 @@ class HUD(
         canvas.drawText(livesText, iconRect.right + textPadding, textY, livesTextPaint)
     }
 
-    private fun drawHealthBar(canvas: Canvas) {
+    private fun drawHealthBar(canvas: Canvas, safeAreaTop: Float) {
         // --- Layout Constants ---
 
-        val yPos = scaler.scaleY(80f)
-        val barHeight = scorePaint.textSize
+        val barHeight = hpTextPaint.textSize + scaler.scaleY(20f)
         val cornerRadius = barHeight / 2f
 
-        val topMargin = yPos - (barHeight / 2f) - (scorePaint.descent() + scorePaint.ascent()) / 2f
-        val barMargin = scaler.scaleX(20f)
+        val barTop = safeAreaTop + topBarY - (barHeight / 2f)
+        val barBottom = barTop + barHeight
 
-        val totalBarWidth = screenWidth * 0.66f // Let's make it 50% of the screen width
-        val barRight = screenWidth - barMargin
+        val yPos = safeAreaTop + scaler.scaleY(80f)
+        val topMargin = yPos - (barHeight / 2f) - (scorePaint.descent() + scorePaint.ascent()) / 2f
+
+        //val barMargin = scaler.scaleX(20f)
+        val totalBarWidth = screenWidth * 0.63f // HP bar width (screen percentage)
+        val barRight = screenWidth - horizontalMargin
         val barLeft = barRight - totalBarWidth
 
         // --- Health Percentage Calculation ---
@@ -163,18 +175,20 @@ class HUD(
         val currentHealthWidth = totalBarWidth * healthPercentage
 
         // Draw the red background first with rounded corners
-        canvas.drawRoundRect(barLeft, topMargin, barRight, topMargin + barHeight, cornerRadius, cornerRadius, healthBarBackgroundPaint)
+        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, cornerRadius, cornerRadius, healthBarBackgroundPaint)
 
         // Draw the green foreground, depleting from RIGHT to LEFT
         if (currentHealthWidth > 0) {
             val greenBarLeft = barRight - currentHealthWidth
-            canvas.drawRoundRect(greenBarLeft, topMargin, barRight, topMargin + barHeight, cornerRadius, cornerRadius, healthBarPaint)
+            canvas.drawRoundRect(greenBarLeft, barTop, barRight, barBottom, cornerRadius, cornerRadius, healthBarPaint)
         }
+
+        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, cornerRadius, cornerRadius, barFramePaint)
 
         // Draw the HP Text inside the bar
         val hpText = "$playerHp HP"
-        val hpTextX = barRight - barMargin
-        val hpTextY = topMargin + (barHeight / 2f) - (hpTextPaint.descent() + hpTextPaint.ascent()) / 2f
+        val hpTextX = barRight - (horizontalMargin / 2)
+        val hpTextY = barTop + (barHeight / 2f) - (hpTextPaint.descent() + hpTextPaint.ascent()) / 2f
         canvas.drawText(hpText, hpTextX, hpTextY, hpTextPaint)
     }
 
