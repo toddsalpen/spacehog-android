@@ -30,7 +30,7 @@ class HUD(
     private val barFramePaint = Paint().apply {
         color = Color.DKGRAY
         style = Paint.Style.STROKE
-        strokeWidth = 4f
+        strokeWidth = 2f
     }
 
     private val scorePaint = Paint().apply {
@@ -135,7 +135,7 @@ class HUD(
     private fun drawScoreCounter(canvas: Canvas, safeAreaTop: Float) {
         val scoreText = String.format("%09d", score)
         //val xPos = scaler.scaleX(50f)
-        val yPos = safeAreaTop + scaler.scaleY(80f)
+        val yPos = safeAreaTop + topBarY - (scorePaint.descent() + scorePaint.ascent()) / 2f
         canvas.drawText(scoreText, horizontalMargin, yPos, scorePaint)
     }
 
@@ -166,7 +166,7 @@ class HUD(
         val topMargin = yPos - (barHeight / 2f) - (scorePaint.descent() + scorePaint.ascent()) / 2f
 
         //val barMargin = scaler.scaleX(20f)
-        val totalBarWidth = screenWidth * 0.45f // Let's make it 50% of the screen width
+        val totalBarWidth = screenWidth * 0.63f // HP bar width (screen percentage)
         val barRight = screenWidth - horizontalMargin
         val barLeft = barRight - totalBarWidth
 
@@ -175,12 +175,12 @@ class HUD(
         val currentHealthWidth = totalBarWidth * healthPercentage
 
         // Draw the red background first with rounded corners
-        canvas.drawRoundRect(barLeft, topMargin, barRight, barBottom, cornerRadius, cornerRadius, healthBarBackgroundPaint)
+        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, cornerRadius, cornerRadius, healthBarBackgroundPaint)
 
         // Draw the green foreground, depleting from RIGHT to LEFT
         if (currentHealthWidth > 0) {
             val greenBarLeft = barRight - currentHealthWidth
-            canvas.drawRoundRect(greenBarLeft, topMargin, barRight, barBottom, cornerRadius, cornerRadius, healthBarPaint)
+            canvas.drawRoundRect(greenBarLeft, barTop, barRight, barBottom, cornerRadius, cornerRadius, healthBarPaint)
         }
 
         canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, cornerRadius, cornerRadius, barFramePaint)
@@ -188,7 +188,7 @@ class HUD(
         // Draw the HP Text inside the bar
         val hpText = "$playerHp HP"
         val hpTextX = barRight - (horizontalMargin / 2)
-        val hpTextY = topMargin + (barHeight / 2f) - (hpTextPaint.descent() + hpTextPaint.ascent()) / 2f
+        val hpTextY = barTop + (barHeight / 2f) - (hpTextPaint.descent() + hpTextPaint.ascent()) / 2f
         canvas.drawText(hpText, hpTextX, hpTextY, hpTextPaint)
     }
 

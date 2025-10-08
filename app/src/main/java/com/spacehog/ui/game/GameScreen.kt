@@ -31,6 +31,7 @@ fun GameScreen(
     gameFocusManager: GameFocusManager,
     starfieldManager: StarfieldManager
 ) {
+    // Enable immersive mode for the game screen
     ImmersiveModeEffect()
 
     val renderer = remember { mutableStateOf<GameRenderer?>(null) }
@@ -38,7 +39,6 @@ fun GameScreen(
     var isGameOver by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
-
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> renderer.value?.resume()
@@ -59,22 +59,16 @@ fun GameScreen(
         }
     }
 
-    val systemBarInsets = WindowInsets.systemBars.asPaddingValues()
-    val density = LocalDensity.current
-    LaunchedEffect(systemBarInsets, renderer.value) {
-        val topPaddingPx = with(density) { systemBarInsets.calculateTopPadding().toPx() }
-        renderer.value?.safeAreaTop = topPaddingPx
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets(0, 0, 0, 0))
             .pointerInput(Unit) {
                 awaitEachGesture {
                     while (true) {
                         val event = awaitPointerEvent()
                         val isPressed = event.changes.any { it.pressed }
-                        if(isGameOver) {
+                        if (isGameOver) {
                             return@awaitEachGesture
                         }
                         if (isPressed) {
