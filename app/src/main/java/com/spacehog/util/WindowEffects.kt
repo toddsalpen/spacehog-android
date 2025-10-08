@@ -1,7 +1,6 @@
 package com.spacehog.util
 
 import android.app.Activity
-import android.view.View
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect

@@ -18,15 +18,15 @@ enum class EnemyType(
         hp = 1,
         score = 25,
         frameCount = 1, // The Blue Bug only has one frame
-        virtualWidth = 120f, // A standard small, square-ish bug
-        virtualHeight = 120f
+        virtualWidth = 170f, // A standard small, square-ish bug
+        virtualHeight = 140f
     ),
     RED_BUG(
         asset = GameAsset.RED_BUG,
         hp = 1,
         score = 15,
         frameCount = 2, // The Red Bug has two frames
-        virtualWidth = 120f, // A standard small, square-ish bug
+        virtualWidth = 150f, // A standard small, square-ish bug
         virtualHeight = 120f
     ),
     YELLOW_BUG(
@@ -34,23 +34,23 @@ enum class EnemyType(
         hp = 1,
         score = 10,
         frameCount = 2, // Also has one frame
-        virtualWidth = 140f, // Red bugs are a bit wider
-        virtualHeight = 110f
+        virtualWidth = 150f, // Red bugs are a bit wider
+        virtualHeight = 120f
     ),
     COMMANDER1(
         asset = GameAsset.COMMANDER1,
         hp = 2,
         score = 50,
         frameCount = 2, // For now, the Commander has one frame
-        virtualWidth = 140f, // Red bugs are a bit wider
-        virtualHeight = 110f
+        virtualWidth = 170f, // Red bugs are a bit wider
+        virtualHeight = 180f
     ),
     COMMANDER2(
         asset = GameAsset.COMMANDER2,
         hp = 2,
         score = 50,
         frameCount = 2, // For now, the Commander has one frame
-        virtualWidth = 140f, // Red bugs are a bit wider
-        virtualHeight = 110f
+        virtualWidth = 170f, // Red bugs are a bit wider
+        virtualHeight = 180f
     );
 }
