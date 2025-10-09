@@ -80,8 +80,10 @@ fun GameScreen(
                             return@awaitEachGesture
                         }
                         if (isPressed) {
-                            val touchX = event.changes.first().position.x
-                            renderer.value?.onPlayerInput(touchX, isFiring = true)
+                            // Get the full Offset (X and Y) of the touch point
+                            val touchPosition = event.changes.first().position
+                            // Send the full position and firing state
+                            renderer.value?.onPlayerInput(touchPosition, isFiring = true)
                         } else {
                             renderer.value?.onPlayerInput(null, isFiring = false)
                             return@awaitEachGesture
