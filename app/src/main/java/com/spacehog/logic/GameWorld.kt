@@ -99,6 +99,7 @@ class GameWorld(
         }
 
         playerShip.update(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat())
+        powerUpManager.updateAll(deltaTimeMs, holder.surfaceFrame.height().toFloat())
         enemyManager.updateAll(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat())
         effectManager.updateAll(deltaTimeMs)
 
