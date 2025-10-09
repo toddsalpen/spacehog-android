@@ -60,7 +60,7 @@ class GameWorld(
 
         val playerBitmap = assetLibrary.getBitmap(PlayerState.NORMAL.asset)
         val playerAspectRatio = playerBitmap.height.toFloat() / playerBitmap.width.toFloat()
-        val playerWidth = scaler.getSpriteWidth(1f / 7f)
+        val playerWidth = scaler.getSpriteWidth(1f / 8f)
         val playerHeight = playerWidth * playerAspectRatio
 
         playerShip = PlayerShip(

@@ -6,6 +6,7 @@ import com.spacehog.data.GameAsset
 enum class WeaponType {
     STANDARD_GUN,
     PIERCING_GUN,
+    DOUBLE_GUN,
     MISSILE_LAUNCHER,
     LASER_BEAM
 }
@@ -28,6 +29,12 @@ enum class PowerUpType(
         durationMs = 15_000L, // 15 seconds
         itemAsset = GameAsset.POWERUP_ITEM_MISSILE,
         hudAsset = GameAsset.HUD_ICON_MISSILE
+    ),
+    DOUBLE_SHOT(
+        grantsWeapon = WeaponType.DOUBLE_GUN,
+        durationMs = 15_000L, // 15 seconds
+        itemAsset = GameAsset.POWERUP_ITEM_DOUBLE, // You will need to create this asset
+        hudAsset = GameAsset.HUD_ICON_DOUBLE      // You will need to create this asset
     );
     // You can easily add the Laser here later.
 }

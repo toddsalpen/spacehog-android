@@ -29,13 +29,30 @@ open class Ship(
     }
 
     // The base fire method is now more generic.
-    open fun fireWeapon(bulletType: BulletType) {
+    open fun fireWeapon(
+        bulletType: BulletType,
+        fireX: Float = this.x + (this.width / 2f), // Default to ship center
+        fireY: Float = this.y // Default to ship front
+    ) {
         if (fireCooldown <= 0L) {
-            val firePositionX = this.x + (this.width / 2f)
-            val firePositionY = this.y
-            bulletBank.fire(bulletType, firePositionX, firePositionY)
+            bulletBank.fire(bulletType, fireX, fireY)
             fireCooldown = currentFireRate.delayMs
         }
+    }
+
+    // The single, powerful fire method. It does NOT check cooldown.
+    fun fireProjectile(bulletType: BulletType, fireX: Float, fireY: Float) {
+        bulletBank.fire(bulletType, fireX, fireY)
+    }
+
+    // A method to check if the weapon is ready to fire.
+    fun canFire(): Boolean {
+        return fireCooldown <= 0L
+    }
+
+    // A method to reset the cooldown AFTER firing is complete.
+    fun resetFireCooldown() {
+        fireCooldown = currentFireRate.delayMs
     }
 
     override fun draw(canvas: Canvas, paint: Paint) {

@@ -4,6 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import com.spacehog.data.AssetLibrary
 import com.spacehog.data.GameAsset
+import com.spacehog.logic.DoubleGun
 import com.spacehog.logic.PiercingGun
 import com.spacehog.logic.StandardGun
 import com.spacehog.logic.WeaponSystem
@@ -173,6 +174,7 @@ class PlayerShip(
             currentWeapon = when (nextPowerUp.grantsWeapon) {
                 WeaponType.STANDARD_GUN -> StandardGun()
                 WeaponType.PIERCING_GUN -> PiercingGun()
+                WeaponType.DOUBLE_GUN -> DoubleGun()
                 // Add cases for Missiles and Laser here later
                 else -> StandardGun()
             }

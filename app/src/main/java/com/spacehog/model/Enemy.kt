@@ -40,39 +40,33 @@ class Enemy(
 
     /**
      * This is the single entry point for updating an enemy's state, called by EnemyManager.
-     * It correctly handles the "disappearing bullet" bug.
      */
     fun update(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float) {
-        // --- THIS IS THE PERSISTENT LOGIC ---
-        // An enemy's bullets should continue to update even if the enemy is destroyed.
         updateBullets(deltaTimeMs, screenHeight)
 
-        // --- THIS IS THE "LIVING" LOGIC ---
-        // Only run AI (movement, firing) if the enemy is active.
         if (isActive) {
-            // updateShipLogic handles animation and firing cooldowns
-            super.updateShipLogic(deltaTimeMs)
-
-            // Firing Decision AI
-            if (fireCooldown <= 0L && this.y > 0) {
-                fire()
-            }
-
-            // Movement AI and Boundary Checks
-            movementStrategy.update(this, deltaTimeMs, screenHeight, screenWidth)
+            updateShipLogic(deltaTimeMs) // This now handles all AI logic
+            updateMovement(deltaTimeMs, screenHeight, screenWidth)
             checkWorldBounds(screenHeight, screenWidth)
         }
     }
 
-    // THIS IS NO LONGER NEEDED. updateShipLogic is now only defined in the parent Ship class.
-    // override fun updateShipLogic(deltaTimeMs: Long) { ... }
+    override fun updateShipLogic(deltaTimeMs: Long) {
+        // First, call the parent's logic to handle sprite animation and to
+        // count down the 'fireCooldown' timer. This is essential.
+        super.updateShipLogic(deltaTimeMs)
 
-    // THIS IS NO LONGER NEEDED. The logic is now inside the main update method.
-    // private fun updateMovement(...) { ... }
+        // Firing Decision AI
+        if (this.y > 0 && canFire()) { // Check if on-screen AND cooldown is ready
+            // If we can fire, call the specific fire method for the enemy
+            fire()
+        }
+    }
 
-    /**
-     * The Enemy's specialized draw method to handle invisibility when defeated.
-     */
+    private fun updateMovement(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float) {
+        movementStrategy.update(this, deltaTimeMs, screenHeight, screenWidth)
+    }
+
     override fun draw(canvas: Canvas, paint: Paint) {
         if (isActive) {
             super.draw(canvas, paint)
@@ -82,7 +76,14 @@ class Enemy(
     }
 
     fun fire() {
-        super.fireWeapon(BulletType.ENEMY_STANDARD)
+        // Fire the projectile without checking the cooldown (we just did that).
+        val fireX = this.x + (this.width / 2f)
+        // Fire from the front of the ship (adjust Y as needed if enemies shoot from a different place).
+        val fireY = this.y + this.height
+        super.fireProjectile(BulletType.ENEMY_STANDARD, fireX, fireY)
+
+        // Reset the cooldown AFTER firing.
+        super.resetFireCooldown()
     }
 
     /**
