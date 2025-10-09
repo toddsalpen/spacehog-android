@@ -26,6 +26,8 @@ enum class GameAsset(@param:DrawableRes val resourceId: Int) {
     HUD_ICON_PIERCING(R.drawable.hud_icon_piercing),
     POWERUP_ITEM_MISSILE(R.drawable.powerup_item_missile),
     HUD_ICON_MISSILE(R.drawable.hud_icon_missile),
+    POWERUP_ITEM_DOUBLE(R.drawable.powerup_item_double),
+    HUD_ICON_DOUBLE(R.drawable.hud_icon_double),
     POWERUP_ITEM_LASER(R.drawable.powerup_item_laser),
     HUD_ICON_LASER(R.drawable.hud_icon_laser),
 

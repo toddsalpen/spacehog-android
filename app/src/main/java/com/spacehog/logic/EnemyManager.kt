@@ -40,7 +40,7 @@ class EnemyManager(
                     type = defaultType,
                     initialBitmap = bitmaps[defaultType]!!,
                     width = scaler.scaleX(defaultType.virtualWidth),
-                    height = scaler.scaleX(defaultType.virtualHeight),
+                    height = scaler.scaleY(defaultType.virtualHeight),
                     assetLibrary = assetLibrary
                 )
             )
@@ -54,7 +54,7 @@ class EnemyManager(
         val aspectRatio = bitmap.height.toFloat() / bitmap.width.toFloat()
 
         val newWidth = scaler.scaleX(type.virtualWidth)
-        val newHeight = newWidth * aspectRatio
+        val newHeight = scaler.scaleY(type.virtualHeight)
 
 
         enemyToSpawn?.spawn(
