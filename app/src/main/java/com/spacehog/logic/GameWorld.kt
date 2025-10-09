@@ -16,6 +16,7 @@ import com.spacehog.model.PlayerShip
 import com.spacehog.model.PlayerState
 import com.spacehog.model.PowerUpType
 import com.spacehog.model.StarField
+import kotlin.random.Random
 
 // A utility function for smooth movement
 fun lerp(start: Float, end: Float, amount: Float): Float {
@@ -46,6 +47,8 @@ class GameWorld(
     var score = 0
         private set
     var lastKnownState: LevelState? = null
+
+    val powerUpManager: PowerUpManager
     private var lastKnownLevel = 0
 
     init {
@@ -75,8 +78,7 @@ class GameWorld(
         enemyManager = EnemyManager(assetLibrary, scaler)
         levelManager = LevelManager(enemyManager, scaler)
         effectManager = EffectManager(assetLibrary)
-
-        //playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
+        powerUpManager = PowerUpManager(assetLibrary, scaler)
 
         syncPlayerToLevel()
 
@@ -108,16 +110,6 @@ class GameWorld(
             return
         }
 
-//        if (levelManager.state == LevelState.RUNNING && lastKnownState != LevelState.RUNNING) {
-//            playerShip.upgradeFireRate(levelManager.currentLevelProperties!!.playerFireRate)
-//        }
-//
-//        if (levelManager.currentLevelNumber > lastKnownLevel) {
-//            syncPlayerToLevel()
-//        }
-//
-//        lastKnownState = levelManager.state
-        //---------------
         if (levelManager.currentLevelNumber > lastKnownLevel) {
             syncPlayerToLevel()
         }
@@ -131,6 +123,15 @@ class GameWorld(
             enemy.y + enemy.height / 2f
         )
         levelManager.onEnemyDefeated()
+        if (Random.nextInt(100) < 25) {
+            // Randomly select which power-up to drop
+            val randomPowerUp = PowerUpType.entries.random()
+            powerUpManager.spawnItem(
+                randomPowerUp,
+                enemy.x + enemy.width / 2f,
+                enemy.y + enemy.height / 2f
+            )
+        }
     }
 
     fun getPowerUpQueue(): List<PowerUpType> {
@@ -141,6 +142,7 @@ class GameWorld(
         val activePlayerBullets = playerShip.getActiveBullets().toList()
         val activeEnemies = enemyManager.getActiveEnemies().toList()
         val activeEnemyBullets = enemyManager.getAllEnemyBullets().toList()
+        val activePowerUpItems = powerUpManager.getActiveItems().toList()
 
         for (bullet in activePlayerBullets) {
             for (enemy in activeEnemies) {
@@ -193,17 +195,23 @@ class GameWorld(
                 }
             }
 
+            for (item in activePowerUpItems) {
+                // Check if the player ship is touching a power-up item
+                if (item.isActive && item.rectCollision(playerShip)) {
+                    // Tell the ship it collected the item
+                    playerShip.collectPowerUp(item.type)
+                    // Tell the item it has been collected so it disappears
+                    item.onCollected()
+                }
+            }
+
         }
     }
 
     private fun syncPlayerToLevel() {
         levelManager.currentLevelProperties?.let { properties ->
-            // Update the player ship with the rules from the new level data.
             playerShip.upgradeFireRate(properties.playerFireRate)
-            // In the future, you could add more things here:
-            // playerShip.setSpeed(properties.playerSpeed)
         }
-        // Update our tracker so this only runs once per level.
         lastKnownLevel = levelManager.currentLevelNumber
     }
 
