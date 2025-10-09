@@ -147,6 +147,7 @@ class GameRenderer(
         paint.color = Color.WHITE
 
         currentWorld.enemyManager.drawAll(canvas, paint)
+        currentWorld.powerUpManager.drawAll(canvas, paint)
         currentWorld.playerShip.draw(canvas, paint)
         currentWorld.effectManager.drawAll(canvas, paint)
 
