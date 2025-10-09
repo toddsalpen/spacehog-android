@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.Log
 import android.view.SurfaceHolder
+import androidx.compose.ui.geometry.Offset
 import com.spacehog.logic.DebugData
 import com.spacehog.logic.GameWorld
 import com.spacehog.logic.Scaler
@@ -27,6 +28,7 @@ class GameRenderer(
     private val paint = Paint()
     @Volatile var safeAreaTop: Float = 0f
     @Volatile private var playerTouchX: Float? = null
+    @Volatile private var playerTouchPosition: Offset? = null
     @Volatile private var isPlayerFiring = false
 
     init {
@@ -104,8 +106,8 @@ class GameRenderer(
         }
     }
 
-    fun onPlayerInput(touchX: Float?, isFiring: Boolean) {
-        this.playerTouchX = touchX
+    fun onPlayerInput(touchPosition: Offset?, isFiring: Boolean) {
+        this.playerTouchPosition = touchPosition
         this.isPlayerFiring = isFiring
     }
 
@@ -119,7 +121,7 @@ class GameRenderer(
         val currentLevelNumber = gameWorld?.levelManager?.currentLevelNumber ?: 0
         val currentDebugData = gameWorld?.getDebugData() ?: DebugData()
 
-        gameWorld?.update(deltaTimeMs, playerTouchX, isPlayerFiring)
+        gameWorld?.update(deltaTimeMs, playerTouchPosition, isPlayerFiring)
 
         hud?.update(
             currentScore,

@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.Log
 import android.view.SurfaceHolder
+import androidx.compose.ui.geometry.Offset
 import com.spacehog.data.AssetLibrary
 import com.spacehog.model.BulletType
 import com.spacehog.model.Enemy
@@ -84,7 +85,7 @@ class GameWorld(
 
     }
 
-    fun update(deltaTimeMs: Long, playerTouchX: Float?, isPlayerFiring: Boolean) {
+    fun update(deltaTimeMs: Long, playerTouchPosition: Offset?, isPlayerFiring: Boolean) {
         if (state == GameWorldState.GAME_OVER) return
 
         levelManager.update(deltaTimeMs)
@@ -93,9 +94,12 @@ class GameWorld(
             playerShip.fire()
         }
 
-        playerTouchX?.let { touchX ->
-            val targetX = touchX - (playerShip.width / 2f)
+        playerTouchPosition?.let { touch ->// Calculate the target X position (centered on the touch)
+            val targetX = touch.x - (playerShip.width / 2f)
+            // Calculate the target Y position (with a vertical offset so the ship is below the finger)
+            val targetY = touch.y - (playerShip.height * 1.5f)
             playerShip.x = lerp(playerShip.x, targetX, 0.25f)
+            playerShip.y = lerp(playerShip.y, targetY, 0.25f)
         }
 
         playerShip.update(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat())
