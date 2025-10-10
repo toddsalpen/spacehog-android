@@ -4,7 +4,7 @@ import android.graphics.PixelFormat
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +36,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.spacehog.logic.StarfieldManager
 import com.spacehog.util.GameFocusManager
-import com.spacehog.util.ImmersiveModeEffect
 
 @Composable
 fun GameScreen(
@@ -72,24 +71,32 @@ fun GameScreen(
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets(0, 0, 0, 0))
             .pointerInput(Unit) {
-                awaitEachGesture {
-                    while (true) {
+                awaitPointerEventScope {
+                    while(true) {
                         val event = awaitPointerEvent()
-                        val isPressed = event.changes.any { it.pressed }
+                        val primaryPointer = event.changes.firstOrNull { it.pressed }
+
                         if (isGameOver) {
-                            return@awaitEachGesture
+                            event.changes.forEach { it.consume() }
+                            continue
                         }
-                        if (isPressed) {
-                            // Get the full Offset (X and Y) of the touch point
-                            val touchPosition = event.changes.first().position
-                            // Send the full position and firing state
-                            renderer.value?.onPlayerInput(touchPosition, isFiring = true)
+
+                        if (primaryPointer != null) {
+                            renderer.value?.onPlayerInput(primaryPointer.position, isFiring = true)
                         } else {
                             renderer.value?.onPlayerInput(null, isFiring = false)
-                            return@awaitEachGesture
                         }
                     }
                 }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        if (!isGameOver) {
+                            renderer.value?.onActivatePowerUp()
+                        }
+                    }
+                )
             }
     ) {
         AndroidView(
