@@ -17,8 +17,10 @@ enum class GameAsset(@param:DrawableRes val resourceId: Int) {
     COMMANDER1(R.drawable.commander1),
     COMMANDER2(R.drawable.commander2),
 
-    // Bullet Sprites
+    // Player Bullet Sprites
     PLAYER_BULLET(R.drawable.player_bullet), // Add player_bullet.png
+    PLAYER_MISSILE(R.drawable.player_bullet), // todo change the image with a real sprite animation
+    // Enemy Bullet Sprites
     ENEMY_BULLET(R.drawable.enemy_bullet),  // Add enemy_bullet.png
 
     // Power Ups
