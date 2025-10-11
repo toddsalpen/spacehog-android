@@ -70,9 +70,15 @@ class EnemyManager(
             )
     }
 
-    fun updateAll(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float) {
+    /**
+     * Updates all enemies in the pool.
+     * It now requires the list of active enemies to pass down to each enemy
+     * for potential AI logic (like homing missiles for enemies in the future).
+     */
+    fun updateAll(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float, activeEnemies: List<Enemy>) {
         for (enemy in enemyPool) {
-            enemy.update(deltaTimeMs, screenHeight, screenWidth)
+            // We pass the list of all other active enemies to each enemy's update method.
+            enemy.update(deltaTimeMs, screenHeight, screenWidth, activeEnemies)
         }
     }
 

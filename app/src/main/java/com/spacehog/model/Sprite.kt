@@ -31,6 +31,7 @@ open class Sprite(
     }
 
     // --- Animation Properties ---
+    var rotation: Float = 0f
     var frameDelayMs: Long = 33L // Default to ~30 FPS (1000ms / 30)
     var loops: Boolean = false
     var state: AnimationState = AnimationState.PAUSED

@@ -88,6 +88,8 @@ class GameWorld(
     fun update(deltaTimeMs: Long, playerTouchPosition: Offset?, isPlayerFiring: Boolean) {
         if (state == GameWorldState.GAME_OVER) return
 
+        val activeEnemies = enemyManager.getActiveEnemies()
+
         levelManager.update(deltaTimeMs)
 
         if (isPlayerFiring) {
@@ -102,9 +104,9 @@ class GameWorld(
             playerShip.y = lerp(playerShip.y, targetY, 0.25f)
         }
 
-        playerShip.update(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat())
+        playerShip.update(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat(), activeEnemies)
         powerUpManager.updateAll(deltaTimeMs, holder.surfaceFrame.height().toFloat())
-        enemyManager.updateAll(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat())
+        enemyManager.updateAll(deltaTimeMs, holder.surfaceFrame.height().toFloat(), holder.surfaceFrame.width().toFloat(), activeEnemies)
         effectManager.updateAll(deltaTimeMs)
 
         checkCollisions()

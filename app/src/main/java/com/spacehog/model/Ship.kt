@@ -24,8 +24,8 @@ open class Ship(
         }
     }
 
-    fun updateBullets(deltaTimeMs: Long, screenHeight: Float) {
-        bulletBank.updateAll(deltaTimeMs, screenHeight)
+    fun updateBullets(deltaTimeMs: Long, screenHeight: Float, activeEnemies: List<Enemy>) {
+        bulletBank.updateAll(deltaTimeMs, screenHeight, activeEnemies)
     }
 
     // The base fire method is now more generic.
