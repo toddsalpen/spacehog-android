@@ -36,10 +36,12 @@ class BulletBank(
         )
     }
 
-    fun updateAll(deltaTimeMs: Long, screenHeight: Float) {
+    // The updateAll method now needs the list of potential targets
+    fun updateAll(deltaTimeMs: Long, screenHeight: Float, activeEnemies: List<Enemy>) {
         for (bullet in allBullets) {
             if (bullet.isActive) {
-                bullet.update(deltaTimeMs, screenHeight)
+                // Pass the list of enemies down to each bullet's update method
+                bullet.update(deltaTimeMs, screenHeight, activeEnemies)
             }
         }
     }

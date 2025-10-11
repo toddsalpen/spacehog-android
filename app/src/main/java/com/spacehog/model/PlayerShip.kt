@@ -5,6 +5,7 @@ import android.graphics.Paint
 import com.spacehog.data.AssetLibrary
 import com.spacehog.data.GameAsset
 import com.spacehog.logic.DoubleGun
+import com.spacehog.logic.MissileLauncher
 import com.spacehog.logic.PiercingGun
 import com.spacehog.logic.StandardGun
 import com.spacehog.logic.WeaponSystem
@@ -63,7 +64,7 @@ class PlayerShip(
 
     private val startY: Float = y
 
-    fun update(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float) {
+    fun update(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float, activeEnemies: List<Enemy>) {
         when (lifeState) {
             PlayerLifeState.ALIVE -> {
                 if (activePowerUp != null) {
@@ -74,20 +75,20 @@ class PlayerShip(
                     }
                 }
                 updateShipLogic(deltaTimeMs)
-                updateBullets(deltaTimeMs, screenHeight)
+                updateBullets(deltaTimeMs, screenHeight, activeEnemies)
             }
             PlayerLifeState.CAPTURED -> {
                 // Future logic for when a ship is captured
                 // It would likely move with its captor and not be controllable
-                updateBullets(deltaTimeMs, screenHeight) // Still update lingering bullets
+                updateBullets(deltaTimeMs, screenHeight, activeEnemies) // Still update lingering bullets
             }
             PlayerLifeState.EXPLODING -> {
                 respawnTimer = respawnTimeMs
                 lifeState = PlayerLifeState.RESPAWNING
-                updateBullets(deltaTimeMs, screenHeight)
+                updateBullets(deltaTimeMs, screenHeight, activeEnemies)
             }
             PlayerLifeState.RESPAWNING -> {
-                updateBullets(deltaTimeMs, screenHeight)
+                updateBullets(deltaTimeMs, screenHeight, activeEnemies)
                 respawnTimer -= deltaTimeMs
                 if (respawnTimer <= 0L) {
                     if (lives > 0) {
@@ -98,7 +99,7 @@ class PlayerShip(
                 }
             }
             PlayerLifeState.GAME_OVER -> {
-                updateBullets(deltaTimeMs, screenHeight)
+                updateBullets(deltaTimeMs, screenHeight, activeEnemies)
             }
         }
     }
@@ -175,7 +176,8 @@ class PlayerShip(
                 WeaponType.STANDARD_GUN -> StandardGun()
                 WeaponType.PIERCING_GUN -> PiercingGun()
                 WeaponType.DOUBLE_GUN -> DoubleGun()
-                // Add cases for Missiles and Laser here later
+                WeaponType.MISSILE_LAUNCHER -> MissileLauncher()
+                // Add cases for other weapons and Laser here later
                 else -> StandardGun()
             }
         }

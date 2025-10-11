@@ -31,6 +31,9 @@ class LevelManager(private val enemyManager: EnemyManager, private val scaler: S
         // Load all levels into our campaign queue
         campaign.add(Levels.LEVEL_1)
         campaign.add(Levels.LEVEL_2)
+        campaign.add(Levels.LEVEL_3)
+        campaign.add(Levels.LEVEL_4)
+        campaign.add(Levels.LEVEL_5)
         campaign.add(Levels.LEVEL_10_HORDE)
         // You can add Levels.LEVEL_3, etc., here later.
 

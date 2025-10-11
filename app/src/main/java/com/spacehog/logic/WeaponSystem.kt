@@ -13,7 +13,8 @@ interface WeaponSystem {
 class StandardGun : WeaponSystem {
     override fun fire(ship: PlayerShip) {
         if (ship.canFire()) {
-            ship.fireProjectile(BulletType.PLAYER_STANDARD, ship.x + ship.width / 2f, ship.y)
+            val fireY = ship.y
+            ship.fireProjectile(BulletType.PLAYER_STANDARD, ship.x + ship.width / 2f, fireY)
             ship.resetFireCooldown()
         }
     }
@@ -24,7 +25,8 @@ class StandardGun : WeaponSystem {
 class PiercingGun : WeaponSystem {
     override fun fire(ship: PlayerShip) {
         if (ship.canFire()) {
-            ship.fireProjectile(BulletType.PLAYER_PIERCING_SHOT, ship.x + ship.width / 2f, ship.y)
+            val fireY = ship.y
+            ship.fireProjectile(BulletType.PLAYER_PIERCING_SHOT, ship.x + ship.width / 2f, fireY)
             ship.resetFireCooldown()
         }
     }
@@ -49,6 +51,29 @@ class DoubleGun : WeaponSystem {
         }
     }
     override fun update(deltaTimeMs: Long) {}
+}
+
+class MissileLauncher : WeaponSystem {
+    override fun fire(ship: PlayerShip) {
+        // 1. Check if the ship's weapon is ready (respects the fireRate cooldown).
+        if (ship.canFire()) {
+            val fireX = ship.x + ship.width / 2f
+            val fireY = ship.y - 10f
+            // 2. Fire one projectile of the PLAYER_HOMING_MISSILE type from the center of the ship.
+            ship.fireProjectile(
+                bulletType = BulletType.PLAYER_HOMING_MISSILE,
+                fireX = fireX,
+                fireY = fireY
+            )
+
+            // 3. Reset the cooldown once the missile is launched.
+            ship.resetFireCooldown()
+        }
+    }
+
+    override fun update(deltaTimeMs: Long) {
+        // Missiles don't have special update logic at the system level, so this is empty.
+    }
 }
 
 // In the future, MissileLauncher and LaserBeam would be their own classes here.

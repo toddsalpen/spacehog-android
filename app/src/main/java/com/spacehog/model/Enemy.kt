@@ -41,8 +41,8 @@ class Enemy(
     /**
      * This is the single entry point for updating an enemy's state, called by EnemyManager.
      */
-    fun update(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float) {
-        updateBullets(deltaTimeMs, screenHeight)
+    fun update(deltaTimeMs: Long, screenHeight: Float, screenWidth: Float, activeEnemies: List<Enemy>) {
+        updateBullets(deltaTimeMs, screenHeight, activeEnemies)
 
         if (isActive) {
             updateShipLogic(deltaTimeMs) // This now handles all AI logic
